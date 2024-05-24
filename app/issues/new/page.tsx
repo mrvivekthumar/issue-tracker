@@ -6,14 +6,16 @@ import "easymde/dist/easymde.min.css";
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { createIssueSchema } from '@/app/validationSchemas';
 
-interface IssueForm {
-    title: string;
-    description: string;
-}
+type IssueForm = z.infer<typeof createIssueSchema>
 
 const NewIssuePage = () => {
-    const { register, control, handleSubmit, formState: { errors } } = useForm<IssueForm>();
+    const { register, control, handleSubmit, formState: { errors } } = useForm<IssueForm>({
+        resolver: zodResolver(createIssueSchema)
+    });
     const router = useRouter();
 
     const onSubmit = async (data: IssueForm) => {
