@@ -12,7 +12,6 @@ const links = [
 const Navbar = () => {
 
     const currentPath = usePathname();
-    console.log(currentPath);
     return (
         <nav className='flex space-x-8 mx-5 mb-5 border-b h-14 items-center'>
             <Link href="/" className='text-black'><FaBug /></Link>
