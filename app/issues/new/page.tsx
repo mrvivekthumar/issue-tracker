@@ -1,5 +1,5 @@
 "use client";
-import { Button, TextField } from '@radix-ui/themes';
+import { Button, Spinner, TextField } from '@radix-ui/themes';
 import dynamic from "next/dynamic";
 const SimpleMDE = dynamic(() => import("react-simplemde-editor"), { ssr: false })
 import "easymde/dist/easymde.min.css";
@@ -10,6 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createIssueSchema } from '@/app/validationSchemas';
 import ErrorMessage from '@/app/components/ErrorMessage';
+import { useState } from 'react';
+import { FaLeaf } from 'react-icons/fa6';
 
 type IssueForm = z.infer<typeof createIssueSchema>
 
@@ -19,13 +21,17 @@ const NewIssuePage = () => {
     });
     const router = useRouter();
 
+    const [isSubmitting, setSubmitting] = useState(false);
+
     const onSubmit = async (data: IssueForm) => {
         console.log(data); // Log data to check its structure
         try {
+            setSubmitting(true);
             const response = await axios.post("/api/issues", data);
             console.log('Response:', response.data); // Log server response
             router.push("/issues");
         } catch (error) {
+            setSubmitting(false);
             if (axios.isAxiosError(error)) {
                 console.error('Axios error:', error.response?.data);
             } else {
@@ -53,7 +59,7 @@ const NewIssuePage = () => {
                     {errors.description?.message}
                 </ErrorMessage>
             </div>
-            <Button type="submit">Submit New Issue</Button>
+            <Button disabled={isSubmitting} type="submit"> Submit New Issue {isSubmitting && <Spinner />}   </Button>
         </form>
     );
 };
