@@ -1,14 +1,11 @@
-import prisma from '@/prisma/client'
 import { Table } from '@radix-ui/themes'
 import React from 'react'
-import IssueStatusBadge from '../components/IssueStatusBadge'
+import 'react-loading-skeleton/dist/skeleton.css'
 import NewIssueButton from './NewIssueButton'
-import delay from 'delay'
-import Link from 'next/link'
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 
-const IssuesPage = async () => {
-
-    const issues = await prisma.issue.findMany();
+const LoadingIssuesPage = async () => {
+    const issues = [1, 2, 3, 4, 5];
     return (
         <div>
             <NewIssueButton />
@@ -23,21 +20,23 @@ const IssuesPage = async () => {
                 <Table.Body>
 
                     {issues.map(issue => (
-                        <Table.Row key={issue.id}>
+                        <Table.Row key={issue}>
                             <Table.Cell>
-                                <Link href={`/issues/${issue.id}`} >
-                                    {issue.title}
-                                </Link>
+                                <Skeleton />
                                 <div className='block md:hidden'>
-                                    <IssueStatusBadge status={issue.status} />
+                                    <Skeleton />
+
                                 </div>
                             </Table.Cell>
 
                             <Table.Cell className='hidden md:table-cell'>
-                                <IssueStatusBadge status={issue.status} />
+                                <SkeletonTheme />
+
                             </Table.Cell>
 
-                            <Table.Cell className='hidden md:table-cell'>{issue.createdAt.toDateString()}</Table.Cell>
+                            <Table.Cell className='hidden md:table-cell'>
+                                <Skeleton />
+                            </Table.Cell>
                         </Table.Row>
                     ))
                     }
@@ -47,4 +46,4 @@ const IssuesPage = async () => {
     )
 }
 
-export default IssuesPage
+export default LoadingIssuesPage
