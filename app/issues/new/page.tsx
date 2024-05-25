@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createIssueSchema } from '@/app/validationSchemas';
+import ErrorMessage from '@/app/components/ErrorMessage';
 
 type IssueForm = z.infer<typeof createIssueSchema>
 
@@ -36,8 +37,10 @@ const NewIssuePage = () => {
     return (
         <form className='max-w-lg space-y-6' onSubmit={handleSubmit(onSubmit)}>
             <div className='flex flex-col space-y-1'>
-                <TextField.Root placeholder="Title" {...register('title', { required: true })} />
-                {errors.title && <span className='text-red-700'>Title is required</span>}
+                <TextField.Root placeholder="Title" {...register('title', { required: "Title is required" })} />
+                <ErrorMessage>
+                    {errors.title?.message}
+                </ErrorMessage>
             </div>
             <div className='flex flex-col space-y-1'>
                 <Controller
@@ -46,7 +49,9 @@ const NewIssuePage = () => {
                     rules={{ required: 'Description is required' }}
                     render={({ field }) => <SimpleMDE {...field} placeholder="Description" />}
                 />
-                {errors.description && <span className='text-red-700'>Description is required</span>}
+                <ErrorMessage>
+                    {errors.description?.message}
+                </ErrorMessage>
             </div>
             <Button type="submit">Submit New Issue</Button>
         </form>
