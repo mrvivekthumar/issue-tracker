@@ -4,7 +4,7 @@ import React from 'react'
 import IssueStatusBadge from '../components/IssueStatusBadge'
 import NewIssueButton from './NewIssueButton'
 import delay from 'delay'
-import Link from 'next/link'
+import Link from '../components/Link'
 
 const IssuesPage = async () => {
 
