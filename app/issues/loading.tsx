@@ -1,8 +1,8 @@
 import { Table } from '@radix-ui/themes'
 import React from 'react'
-import 'react-loading-skeleton/dist/skeleton.css'
 import NewIssueButton from './NewIssueButton'
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 const LoadingIssuesPage = async () => {
     const issues = [1, 2, 3, 4, 5, 6, 7];
@@ -30,7 +30,7 @@ const LoadingIssuesPage = async () => {
                             </Table.Cell>
 
                             <Table.Cell className='hidden md:table-cell'>
-                                <SkeletonTheme />
+                                <Skeleton />
 
                             </Table.Cell>
 
