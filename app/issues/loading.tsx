@@ -1,8 +1,7 @@
 import { Table } from '@radix-ui/themes'
-import React from 'react'
-import NewIssueButton from './NewIssueButton'
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
+import NewIssueButton from './NewIssueButton'
 
 const LoadingIssuesPage = async () => {
     const issues = [1, 2, 3, 4, 5, 6, 7];
