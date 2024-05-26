@@ -5,7 +5,7 @@ import NewIssueButton from './NewIssueButton'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 
 const LoadingIssuesPage = async () => {
-    const issues = [1, 2, 3, 4, 5];
+    const issues = [1, 2, 3, 4, 5, 6, 7];
     return (
         <div>
             <NewIssueButton />
