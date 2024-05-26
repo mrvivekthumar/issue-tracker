@@ -11,7 +11,6 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 const SimpleMDE = dynamic(() => import("react-simplemde-editor"), { ssr: false })
-
 type IssueForm = z.infer<typeof createIssueSchema>
 
 const NewIssuePage = () => {
@@ -40,9 +39,9 @@ const NewIssuePage = () => {
     };
 
     return (
-        <form className='max-w-lg space-y-6' onSubmit={handleSubmit(onSubmit)}>
+        <form className='max-w-xl space-y-6' onSubmit={handleSubmit(onSubmit)}>
             <div className='flex flex-col space-y-1'>
-                <TextField.Root placeholder="Title" {...register('title', { required: "Title is required" })} />
+                <TextField.Root {...register('title', { required: "Title is required" })} placeholder="Title" />
                 <ErrorMessage>
                     {errors.title?.message}
                 </ErrorMessage>

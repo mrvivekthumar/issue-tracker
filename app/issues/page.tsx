@@ -31,7 +31,7 @@ const IssuesPage = async () => {
                             </Table.Cell>
 
                             <Table.Cell className='hidden md:table-cell'>
-                                <IssueStatusBadge status={issue.status} />
+                                <IssuesStatusBadge status={issue.status} />
                             </Table.Cell>
 
                             <Table.Cell className='hidden md:table-cell'>{issue.createdAt.toDateString()}</Table.Cell>
