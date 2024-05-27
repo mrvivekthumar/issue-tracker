@@ -6,7 +6,7 @@ import { FaBug } from "react-icons/fa6";
 
 const links = [
     { label: "dashboard", href: "/" },
-    { label: "Issues", href: "/issues" },
+    { label: "Issues", href: "/issues/list" },
 ]
 const Navbar = () => {
 
