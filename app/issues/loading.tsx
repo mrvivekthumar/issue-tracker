@@ -1,9 +1,9 @@
+import { Skeleton } from "@/app/components";
 import { Table } from '@radix-ui/themes';
-import NewIssueButton from './NewIssueButton';
-import { Skeleton } from "@/app/components"
+import NewIssueButton from './NewIssue';
 
 const LoadingIssuesPage = async () => {
-    const issues = [1, 2, 3, 4, 5, 6, 7];
+    const issues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return (
         <div>
             <NewIssueButton />

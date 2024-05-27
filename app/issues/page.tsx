@@ -1,7 +1,7 @@
+import { IssuesStatusBadge, Link } from '@/app/components'
 import prisma from '@/prisma/client'
 import { Table } from '@radix-ui/themes'
-import NewIssueButton from './NewIssueButton'
-import { IssuesStatusBadge, Link } from '@/app/components'
+import NewIssueButton from './NewIssue'
 
 const IssuesPage = async () => {
 
@@ -45,7 +45,7 @@ const IssuesPage = async () => {
 }
 
 
-//  this is for caching improvements
+//  THIS IS FOR CACHING IMPROVEMENTS
 
 // export const dynamic = 'force-dynamic';
 export const revalidate = 0;
