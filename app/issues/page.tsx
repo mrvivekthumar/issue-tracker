@@ -44,4 +44,10 @@ const IssuesPage = async () => {
     )
 }
 
+
+//  this is for caching improvements
+
+// export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default IssuesPage
