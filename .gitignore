@@ -6,9 +6,13 @@
 .pnp.js
 .yarn/install-state.gz
 
+
+# Ignore .env file
+.env
+
+
 # testing
 /coverage
-
 # next.js
 /.next/
 /out/
@@ -29,7 +33,6 @@ yarn-error.log*
 .env*.local
 
 # vercel
-.vercel
 
 # typescript
 *.tsbuildinfo
