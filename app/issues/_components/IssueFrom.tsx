@@ -1,6 +1,6 @@
 "use client";
 import ErrorMessage from '@/app/components/ErrorMessage';
-import { createIssueSchema } from '@/app/validationSchemas';
+import { IssueSchema } from '@/app/validationSchemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Issue } from '@prisma/client';
 import { Button, Spinner, TextField } from '@radix-ui/themes';
@@ -12,11 +12,11 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 const SimpleMDE = dynamic(() => import("react-simplemde-editor"), { ssr: false })
-type IssueFormData = z.infer<typeof createIssueSchema>
+type IssueFormData = z.infer<typeof IssueSchema>
 
 const IssueForm = ({ issue }: { issue?: Issue }) => {
     const { register, control, handleSubmit, formState: { errors } } = useForm<IssueFormData>({
-        resolver: zodResolver(createIssueSchema)
+        resolver: zodResolver(IssueSchema)
     });
     const router = useRouter();
 
@@ -26,8 +26,11 @@ const IssueForm = ({ issue }: { issue?: Issue }) => {
         console.log(data); // Log data to check its structure
         try {
             setSubmitting(true);
-            const response = await axios.post("/api/issues", data);
-            console.log('Response:', response.data); // Log server response
+            if (issue) {
+                await axios.patch("/api/issues/" + issue?.id, data);
+            } else {
+                await axios.post("/api/issues", data);
+            }
             router.push("/issues");
         } catch (error) {
             setSubmitting(false);
@@ -59,7 +62,9 @@ const IssueForm = ({ issue }: { issue?: Issue }) => {
                     {errors.description?.message}
                 </ErrorMessage>
             </div>
-            <Button disabled={isSubmitting} type="submit"> Submit New Issue {isSubmitting && <Spinner />}   </Button>
+            <Button disabled={isSubmitting} type="submit">
+                {issue ? "Update Issue" : 'Submit New Issue'}
+                {isSubmitting && <Spinner />}   </Button>
         </form>
     );
 };
