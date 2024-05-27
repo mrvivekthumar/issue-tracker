@@ -7,7 +7,7 @@
 .yarn/install-state.gz
 
 
-# Ignore .env file
+#Ignore .env file
 .env
 
 
