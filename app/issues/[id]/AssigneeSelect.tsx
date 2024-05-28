@@ -29,13 +29,14 @@ const AssigneeSelect = ({ issue }: { issue: Issue }) => {
     return (
         <>
             <Select.Root
-                defaultValue={issue.assignedToUserId || ""}
+                defaultValue={issue.assignedToUserId || "vivek"}
                 onValueChange={assignIssue}
             >
                 <Select.Trigger placeholder='Assignee...' />
                 <Select.Content>
                     <Select.Group>
                         <Select.Label>Suggestions</Select.Label>
+                        <Select.Item value={' ' || "vivek"}>Unassigend</Select.Item>
                         {users?.map(user => (
                             <Select.Item key={user.id} value={user.id}>
                                 {user.name}

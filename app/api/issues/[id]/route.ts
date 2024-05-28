@@ -34,13 +34,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!issue) {
         return NextResponse.json({ error: 'Invalid Issue' }, { status: 404 })
     }
- 
+
     const updatesIssue = await prisma.issue.update({
         where: { id: issue.id },
         data: {
             title,
             description,
-            assignedToUserId,
+            assignedToUserId: assignedToUserId || null,
         }
     })
 
