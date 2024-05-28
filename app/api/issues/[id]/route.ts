@@ -6,10 +6,10 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-    // const session = await getServerSession(authOptions);
-    // if (!session) {
-    //     return NextResponse.json({}, { status: 401 })
-    // }s
+    const session = await getServerSession(authOptions);
+    if (!session) {
+        return NextResponse.json({}, { status: 401 })
+    }
 
 
     const body = await request.json();
@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!issue) {
         return NextResponse.json({ error: 'Invalid Issue' }, { status: 404 })
     }
-
+ 
     const updatesIssue = await prisma.issue.update({
         where: { id: issue.id },
         data: {

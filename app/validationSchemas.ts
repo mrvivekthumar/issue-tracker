@@ -8,5 +8,5 @@ export const IssueSchema = z.object({
 export const patchIssueSchema = z.object({
     title: z.string().min(1, "Tilte is Required").max(255).optional(),
     description: z.string().min(1, "Description is Required").max(65535).optional(),
-    assignedToUserId: z.string().min(1).max(65535).optional().nullable(),
+    assignedToUserId: z.string().min(1, "Assigned to UserId Required").max(255).optional().nullable(),
 })
