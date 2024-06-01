@@ -11,7 +11,7 @@ import { Skeleton } from '@/app/components'
 const Navbar = () => {
 
     return (
-        <nav className='mx-3 py-3 mb-5 border-b  items-center'>
+        <nav className='mx-4 py-4 mb-6 border-b  items-center'>
             <Container>
                 <Flex justify='between'>
                     <Flex align='center' gap='5'>
@@ -60,7 +60,7 @@ const AuthStatus = () => {
     const { status, data: session } = useSession();
 
     if (status === "loading") {
-        return <Skeleton width='3rem' />;
+        return <Skeleton width='1.5rem' height='1.5rem' />;
     }
 
     if (status === "unauthenticated") {

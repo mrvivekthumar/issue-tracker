@@ -1,7 +1,9 @@
+import Pagination from "./components/Pagination";
+
 export default function Home() {
   return (
-    <div className="text-cyan-400">
-      hello vivek
+    <div className="text-black">
+      <Pagination itemCount={100} pageSize={10} currentPage={10} />
     </div>
   );
 }
