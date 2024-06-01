@@ -4,6 +4,7 @@ import { Status } from '@prisma/client'
 import { Flex } from '@radix-ui/themes'
 import IssueTable, { columnNames, IssueQuery } from './IssueTable'
 import IssueAction from './IsuueAction'
+import { Metadata } from 'next'
 
 interface Props {
     searchParams: IssueQuery
@@ -42,9 +43,16 @@ const IssuesPage = async ({ searchParams }: Props) => {
 }
 
 
-//  THIS IS FOR CACHING IMPROVEMENTS
+//  THIS IS FOR CACHING IMPROVEMENTS method 1
+// export const revalidate = 0;
 
-// export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+//  THIS IS FOR CACHING IMPROVEMENTS method 2
+export const dynamic = 'force-dynamic';
+
+
+export const metadata: Metadata = {
+    title: 'Issuse Tracker - Issue List ',
+    description: 'View all Prohect Issues'
+}
 
 export default IssuesPage
