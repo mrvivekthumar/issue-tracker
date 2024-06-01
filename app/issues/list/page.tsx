@@ -5,13 +5,16 @@ import NewIssueButton from './IsuueAction'
 import { Status } from '@prisma/client'
 
 interface Props {
-    searchparams: { status: Status }
+    searchParams: { status: Status }
 }
 
-const IssuesPage = async ({ searchparams }: Props) => {
+const IssuesPage = async ({ searchParams }: Props) => {
+
+    const statuses = Object.values(Status);
+    const status = statuses.includes(searchParams?.status) ? searchParams.status : undefined;
     const issues = await prisma.issue.findMany({
         where: {
-            status: searchparams.status
+            status
         }
     });
 
