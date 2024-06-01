@@ -8,10 +8,14 @@ import AssigneeSelect from './AssigneeSelect';
 import DeleteIssueButton from './DeleteIssueButton';
 import EditIssueButton from './EditIssueButton';
 import IssueDetails from './IssueDetails';
+import { cache } from 'react';
 
 interface Props {
     params: { id: string }
 }
+
+// This fuction will cache the issue details so database load can be removed
+const fetchUser = cache((issuedId: number) => prisma.issue.findUnique({ where: { id: issuedId } }))
 
 const IssueDetailPage = async ({ params }: Props) => {
 
@@ -20,11 +24,7 @@ const IssueDetailPage = async ({ params }: Props) => {
         return NextResponse.json({}, { status: 401 })
     }
 
-    const issue = await prisma.issue.findUnique({
-        where: {
-            id: parseInt(params.id)
-        }
-    });
+    const issue = await fetchUser(parseInt(params.id));
 
     if (!issue) {
         notFound();
@@ -48,7 +48,7 @@ const IssueDetailPage = async ({ params }: Props) => {
 }
 
 export async function generateMetadata({ params }: Props) {
-    const issue = await prisma.issue.findUnique({ where: { id: parseInt(params.id) } })
+    const issue = await fetchUser(parseInt(params.id));
 
     return {
         title: issue?.title,
