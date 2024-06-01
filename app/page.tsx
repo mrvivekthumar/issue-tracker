@@ -1,5 +1,6 @@
 import prisma from "@/prisma/client";
 import IssueSummary from "./IssueSummary";
+import IssueChart from "./IssueChart";
 
 export default async function Home() {
 
@@ -9,7 +10,7 @@ export default async function Home() {
 
   return (
     <div className="text-black">
-      <IssueSummary open={open} closed={closed} inProgress={inProgress} />
+      <IssueChart open={open} closed={closed} inProgress={inProgress} />
     </div>
   );
 }
