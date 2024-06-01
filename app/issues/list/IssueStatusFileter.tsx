@@ -1,7 +1,7 @@
 'use client'
 import { Status } from "@prisma/client";
 import { Select } from "@radix-ui/themes";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const statuses: { label: string, value: string }[] = [
     { label: "Open", value: 'OPEN' },
@@ -15,11 +15,26 @@ type ExtendedStatus = Status | 'ALL';
 
 const IssueStatusFileter = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
     return (
-        <Select.Root onValueChange={(status: ExtendedStatus) => {
-            const query = status === 'ALL' ? '' : `?status=${status}`;
-            router.push('/issues/list' + query);
-        }}>
+        <Select.Root
+            defaultValue={searchParams.get('orderBy') || ""}
+            onValueChange={(status: ExtendedStatus) => {
+                const params = new URLSearchParams();
+                if (status) {
+                    params.append('status', status);
+                }
+
+                if (searchParams.get('orderBy')) {
+                    params.append('orderBy', searchParams.get('orderBy')!)
+                }
+
+                const query = params.size ? '?' + params.toString() : "";
+
+                // const query = status === 'ALL' ? '' : `?status=${status}`;
+                router.push('/issues/list' + query);
+            }}>
             <Select.Trigger placeholder="Fileter by status..." />
             <Select.Content>
                 {statuses.map((status) => (
