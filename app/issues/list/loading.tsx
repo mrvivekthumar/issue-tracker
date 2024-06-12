@@ -7,7 +7,7 @@ const LoadingIssuesPage = async () => {
     return (
         <div>
             <NewIssueButton />
-            <Table.Root variant='surface'>
+            <Table.Root variant='surface' mt='3'>
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeaderCell>Issues</Table.ColumnHeaderCell>
