@@ -9,12 +9,11 @@ import { Skeleton } from '@/app/components'
 
 
 const Navbar = () => {
-
     return (
-        <nav className='mx-4 py-4 mb-6 border-b  items-center'>
+        <nav className='m-4 p-1 border-b border-zinc-500 items-center'>
             <Container>
                 <Flex justify='between'>
-                    <Flex align='center' gap='5'>
+                    <Flex align='center' gap='8'>
                         <Link href="/" className='text-black'><FaBug /></Link>
                         <NavLinks />
                     </Flex>

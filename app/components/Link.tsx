@@ -6,8 +6,6 @@ interface Props {
     children: string
 }
 
-
-
 const Link = ({ href, children }: Props) => {
     return (
         <NextLink href={href} passHref legacyBehavior>

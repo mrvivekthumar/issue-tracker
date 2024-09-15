@@ -9,7 +9,6 @@ const IssueForm = dynamic(
     }
 )
 
-
 const NewIssuePage = async () => {
 
     return (
