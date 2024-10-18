@@ -12,6 +12,7 @@ const Latestissues = async () => {
             assignedToUser: true
         }
     })
+
     return (
         <Card>
             <Heading size='4' mb='5'>Latest Issues</Heading>
@@ -26,7 +27,7 @@ const Latestissues = async () => {
                                             <Link href={`/issues/${issue.id}`}>{issue.title}</Link>
                                             <IssueStatusBadge status={issue.status} />
                                         </Flex>
-                                        {issue.assignedToUser && <Avatar src={issue.assignedToUser.image!} size='2' radius='full' fallback='?' />}
+                                        {issue.assignedToUser && <Avatar src={issue.assignedToUser.image || ""} size='2' radius='full' fallback='?' />}
                                     </Flex>
                                 </Table.Cell>
 
