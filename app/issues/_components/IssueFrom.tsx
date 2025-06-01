@@ -3,7 +3,6 @@ import ErrorMessage from '@/app/components/ErrorMessage';
 import { IssueSchema } from '@/app/validationSchemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Issue } from '@prisma/client';
-import { Button, Callout, TextField, Card, Flex, Text, Badge } from '@radix-ui/themes';
 import axios from 'axios';
 import "easymde/dist/easymde.min.css";
 import { useRouter } from 'next/navigation';
@@ -122,108 +121,95 @@ const IssueForm = ({ issue }: IssueFormProps) => {
 
     if (showSuccess) {
         return (
-            <div
-                className="min-h-[400px] flex items-center justify-center"
-            >
-                <Card className="p-8 text-center max-w-md mx-auto">
-                    <div
-                    >
-                        <FiCheck className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <div className="min-h-[400px] flex items-center justify-center animate-fade-in">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8 text-center max-w-md mx-4">
+                    <div className="animate-bounce mb-4">
+                        <FiCheck className="w-16 h-16 text-green-500 mx-auto" />
                     </div>
-                    <Text size="6" weight="bold" className="text-gray-900 mb-2">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
                         {issue ? 'Issue Updated!' : 'Issue Created!'}
-                    </Text>
-                    <Text size="3" className="text-gray-600">
+                    </h2>
+                    <p className="text-gray-600">
                         Redirecting to issues list...
-                    </Text>
-                </Card>
+                    </p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div
-            className="max-w-4xl mx-auto p-6"
-        >
+        <div className="max-w-4xl mx-auto p-6 animate-fade-in">
             <Toaster position="top-right" />
 
             {/* Header Section */}
             <div className="mb-8">
-                <Flex justify="between" align="center" className="mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div>
-                        <Text size="8" weight="bold" className="text-gray-900 mb-2 block">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
                             {issue ? 'Edit Issue' : 'Create New Issue'}
-                        </Text>
-                        <Text size="4" className="text-gray-600">
+                        </h1>
+                        <p className="text-gray-600 text-lg">
                             {issue ? 'Update the issue details below.' : 'Fill in the details to create a new issue.'}
-                        </Text>
+                        </p>
                     </div>
-                    <Badge
-                        color={completionPercentage() === 100 ? "green" : "gray"}
-                        size="2"
-                        className="px-3 py-1"
-                    >
-                        {Math.round(completionPercentage())}% Complete
-                    </Badge>
-                </Flex>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-gray-700">
+                            {Math.round(completionPercentage())}% Complete
+                        </span>
+                    </div>
+                </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-6 overflow-hidden">
                     <div
-                        className="bg-gradient-to-r from-violet-500 to-purple-600 h-2 rounded-full"
+                        className="bg-gradient-to-r from-violet-500 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${completionPercentage()}%` }}
                     />
                 </div>
             </div>
 
-            <Card className="p-8 shadow-lg border border-gray-200">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8">
                 {error && (
-                    <div
-                        className="mb-6"
-                    >
-                        <Callout.Root color="red" className="border border-red-200 bg-red-50">
-                            <Callout.Icon>
-                                <FiAlertCircle />
-                            </Callout.Icon>
-                            <Callout.Text>{error}</Callout.Text>
-                        </Callout.Root>
+                    <div className="mb-6 animate-slide-up">
+                        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                            <p className="text-red-700 font-medium">{error}</p>
+                        </div>
                     </div>
                 )}
 
                 <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
                     {/* Title Field */}
-                    <div
-                        className="space-y-3"
-                    >
+                    <div className="space-y-3 animate-slide-left" style={{ animationDelay: '0.1s' }}>
                         <label htmlFor="title" className="block text-sm font-semibold text-gray-700">
                             Issue Title <span className="text-red-500">*</span>
                         </label>
-                        <TextField.Root
-                            size="3"
-                            className={`transition-all duration-200 ${errors.title ? 'ring-2 ring-red-500' : 'focus-within:ring-2 focus-within:ring-violet-500'}`}
-                        >
-                            <TextField.Input
-                                id="title"
-                                {...register('title')}
-                                placeholder="Enter a clear, descriptive title..."
-                                className="text-lg"
-                            />
-                        </TextField.Root>
+                        <input
+                            id="title"
+                            {...register('title')}
+                            placeholder="Enter a clear, descriptive title..."
+                            className={`w-full px-4 py-3 text-lg border-2 rounded-lg transition-all duration-200 focus:outline-none ${errors.title
+                                ? 'border-red-300 focus:border-red-500 bg-red-50'
+                                : 'border-gray-300 focus:border-violet-500 focus:bg-white'
+                                } placeholder-gray-400`}
+                        />
                         {errors.title && (
-                            <div
-                            >
+                            <div className="animate-slide-up">
                                 <ErrorMessage>{errors.title?.message}</ErrorMessage>
                             </div>
                         )}
                     </div>
 
                     {/* Description Field */}
-                    <div
-                        className="space-y-3"
-                    >
+                    <div className="space-y-3 animate-slide-left" style={{ animationDelay: '0.2s' }}>
                         <label htmlFor="description" className="block text-sm font-semibold text-gray-700">
                             Description <span className="text-red-500">*</span>
                         </label>
-                        <div className={`rounded-lg border-2 transition-all duration-200 ${errors.description ? 'border-red-500' : 'border-gray-200 focus-within:border-violet-500'}`}>
+                        <div className={`border-2 rounded-lg transition-all duration-200 ${errors.description
+                            ? 'border-red-300 bg-red-50'
+                            : 'border-gray-300 focus-within:border-violet-500'
+                            }`}>
                             <Controller
                                 control={control}
                                 name="description"
@@ -252,70 +238,58 @@ const IssueForm = ({ issue }: IssueFormProps) => {
                             />
                         </div>
                         {errors.description && (
-                            <div
-                            >
+                            <div className="animate-slide-up">
                                 <ErrorMessage>{errors.description?.message}</ErrorMessage>
                             </div>
                         )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div
-                        className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200"
-                    >
-                        <Button
+                    <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                        <button
                             type="submit"
                             disabled={isSubmitting || !isValid}
-                            className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
-                            size="3"
+                            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl disabled:shadow-md"
                         >
                             {isSubmitting ? (
-                                <Flex align="center" gap="2">
-                                    <div
-                                    >
-                                        <FiRefreshCw className="w-4 h-4" />
-                                    </div>
+                                <>
+                                    <FiRefreshCw className="w-5 h-5 animate-spin" />
                                     Processing...
-                                </Flex>
+                                </>
                             ) : (
-                                <Flex align="center" gap="2">
-                                    <FiSave className="w-4 h-4" />
+                                <>
+                                    <FiSave className="w-5 h-5" />
                                     {issue ? 'Update Issue' : 'Create Issue'}
-                                </Flex>
+                                </>
                             )}
-                        </Button>
+                        </button>
 
-                        <Button
+                        <button
                             type="button"
-                            variant="soft"
-                            color="gray"
                             onClick={handleReset}
                             disabled={isSubmitting || !isDirty}
-                            size="3"
-                            className="px-6 py-3 font-semibold transition-all duration-200 hover:scale-105"
+                            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 disabled:text-gray-400 font-semibold rounded-lg transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
                         >
-                            <Flex align="center" gap="2">
+                            <div className="flex items-center justify-center gap-2">
                                 <FiRefreshCw className="w-4 h-4" />
                                 Reset
-                            </Flex>
-                        </Button>
+                            </div>
+                        </button>
 
-                        <Button
+                        <button
                             type="button"
-                            variant="outline"
                             onClick={handleCancel}
                             disabled={isSubmitting}
-                            size="3"
-                            className="px-6 py-3 font-semibold transition-all duration-200 hover:scale-105 border-gray-300 hover:border-gray-400"
+                            className="px-6 py-3 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-all duration-200 hover:scale-105 disabled:hover:scale-100 hover:bg-gray-50"
                         >
-                            <Flex align="center" gap="2">
+                            <div className="flex items-center justify-center gap-2">
                                 <FiX className="w-4 h-4" />
                                 Cancel
-                            </Flex>
-                        </Button>
+                            </div>
+                        </button>
                     </div>
                 </form>
-            </Card>
+            </div>
         </div>
     );
 };

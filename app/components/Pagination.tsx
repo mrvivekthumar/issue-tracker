@@ -1,8 +1,7 @@
 'use client';
-import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from "@radix-ui/react-icons";
-import { Button, Flex, Text, Select } from "@radix-ui/themes";
+import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiChevronDown } from "react-icons/fi";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 
 interface PaginationProps {
     itemCount: number;
@@ -26,6 +25,20 @@ const Pagination = ({
     const router = useRouter();
     const searchParams = useSearchParams();
     const pageCount = Math.ceil(itemCount / pageSize);
+    const [isPageSizeOpen, setIsPageSizeOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsPageSizeOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const changePage = useCallback((page: number) => {
         const params = new URLSearchParams();
@@ -47,6 +60,7 @@ const Pagination = ({
         params.set('page', '1'); // Reset to first page when changing page size
         router.push("?" + params.toString());
         onPageSizeChange?.(newPageSize);
+        setIsPageSizeOpen(false);
     }, [router, searchParams, onPageSizeChange]);
 
     // Calculate visible page numbers
@@ -76,163 +90,152 @@ const Pagination = ({
     }
 
     return (
-        <div
-            className="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
-        >
-            <Flex justify="between" align="center" wrap="wrap" gap="4">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 animate-fade-in">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 {/* Results Information */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <Text size="2" className="text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <p className="text-sm text-gray-600">
                         Showing <span className="font-semibold text-gray-900">{startItem}</span> to{' '}
                         <span className="font-semibold text-gray-900">{endItem}</span> of{' '}
                         <span className="font-semibold text-gray-900">{itemCount}</span> results
-                    </Text>
+                    </p>
 
                     {/* Page Size Selector */}
                     {showPageSizeSelector && (
-                        <Flex align="center" gap="2">
-                            <Text size="2" className="text-gray-600 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 whitespace-nowrap">
                                 Items per page:
-                            </Text>
-                            <Select.Root
-                                value={pageSize.toString()}
-                                onValueChange={(value) => changePageSize(parseInt(value))}
-                                size="1"
-                            >
-                                <Select.Trigger className="min-w-[70px]" />
-                                <Select.Content>
-                                    {pageSizeOptions.map((size) => (
-                                        <Select.Item key={size} value={size.toString()}>
-                                            {size}
-                                        </Select.Item>
-                                    ))}
-                                </Select.Content>
-                            </Select.Root>
-                        </Flex>
+                            </span>
+                            <div className="relative" ref={dropdownRef}>
+                                <button
+                                    onClick={() => setIsPageSizeOpen(!isPageSizeOpen)}
+                                    className="inline-flex items-center gap-2 px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors duration-200 min-w-[70px] justify-between"
+                                >
+                                    <span>{pageSize}</span>
+                                    <FiChevronDown className={`w-3 h-3 transition-transform duration-200 ${isPageSizeOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isPageSizeOpen && (
+                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[70px] animate-slide-up">
+                                        <div className="py-1">
+                                            {pageSizeOptions.map((size) => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => changePageSize(size)}
+                                                    className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${pageSize === size
+                                                        ? 'bg-violet-50 text-violet-700 font-medium'
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                        }`}
+                                                >
+                                                    {size}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     )}
                 </div>
 
                 {/* Navigation Controls */}
-                <Flex align="center" gap="1">
+                <div className="flex items-center gap-1">
                     {/* First Page */}
-                    <Button
-                        variant="soft"
-                        color="gray"
+                    <button
                         disabled={currentPage === 1}
                         onClick={() => changePage(1)}
-                        className="hidden sm:flex transition-all duration-200 hover:scale-105"
-                        size="2"
+                        className="hidden sm:flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
                         title="First page"
                     >
-                        <DoubleArrowLeftIcon />
-                    </Button>
+                        <FiChevronsLeft className="w-4 h-4" />
+                    </button>
 
                     {/* Previous Page */}
-                    <Button
-                        variant="soft"
-                        color="gray"
+                    <button
                         disabled={currentPage === 1}
                         onClick={() => changePage(currentPage - 1)}
-                        className="transition-all duration-200 hover:scale-105"
-                        size="2"
+                        className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
                         title="Previous page"
                     >
-                        <ChevronLeftIcon />
-                    </Button>
+                        <FiChevronLeft className="w-4 h-4" />
+                    </button>
 
                     {/* Page Numbers */}
                     <div className="hidden sm:flex items-center gap-1">
                         {/* Show ellipsis if we're not showing the first page */}
                         {visiblePages[0] > 1 && (
                             <>
-                                <Button
-                                    variant="ghost"
-                                    size="2"
+                                <button
                                     onClick={() => changePage(1)}
-                                    className="w-8 h-8 p-0 transition-all duration-200 hover:scale-105"
+                                    className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 hover:scale-105"
                                 >
                                     1
-                                </Button>
+                                </button>
                                 {visiblePages[0] > 2 && (
-                                    <Text size="2" className="px-1 text-gray-400">
-                                        ...
-                                    </Text>
+                                    <span className="px-1 text-gray-400 text-sm">...</span>
                                 )}
                             </>
                         )}
 
                         {/* Visible page numbers */}
                         {visiblePages.map((page) => (
-                            <div
+                            <button
                                 key={page}
+                                onClick={() => changePage(page)}
+                                disabled={currentPage === page}
+                                className={`flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium transition-all duration-200 ${currentPage === page
+                                    ? 'bg-violet-600 text-white shadow-lg'
+                                    : 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:scale-105'
+                                    } disabled:cursor-default disabled:hover:scale-100`}
                             >
-                                <Button
-                                    variant={currentPage === page ? "solid" : "ghost"}
-                                    color={currentPage === page ? "violet" : "gray"}
-                                    size="2"
-                                    onClick={() => changePage(page)}
-                                    className="w-8 h-8 p-0 transition-all duration-200"
-                                    disabled={currentPage === page}
-                                >
-                                    {page}
-                                </Button>
-                            </div>
+                                {page}
+                            </button>
                         ))}
 
                         {/* Show ellipsis if we're not showing the last page */}
                         {visiblePages[visiblePages.length - 1] < pageCount && (
                             <>
                                 {visiblePages[visiblePages.length - 1] < pageCount - 1 && (
-                                    <Text size="2" className="px-1 text-gray-400">
-                                        ...
-                                    </Text>
+                                    <span className="px-1 text-gray-400 text-sm">...</span>
                                 )}
-                                <Button
-                                    variant="ghost"
-                                    size="2"
+                                <button
                                     onClick={() => changePage(pageCount)}
-                                    className="w-8 h-8 p-0 transition-all duration-200 hover:scale-105"
+                                    className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 hover:scale-105"
                                 >
                                     {pageCount}
-                                </Button>
+                                </button>
                             </>
                         )}
                     </div>
 
                     {/* Mobile page indicator */}
                     <div className="sm:hidden">
-                        <Text size="2" className="px-2 py-1 bg-gray-100 rounded-md text-gray-700 font-medium">
+                        <span className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 font-medium">
                             {currentPage} / {pageCount}
-                        </Text>
+                        </span>
                     </div>
 
                     {/* Next Page */}
-                    <Button
-                        variant="soft"
-                        color="gray"
+                    <button
                         disabled={currentPage === pageCount}
                         onClick={() => changePage(currentPage + 1)}
-                        className="transition-all duration-200 hover:scale-105"
-                        size="2"
+                        className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
                         title="Next page"
                     >
-                        <ChevronRightIcon />
-                    </Button>
+                        <FiChevronRight className="w-4 h-4" />
+                    </button>
 
                     {/* Last Page */}
-                    <Button
-                        variant="soft"
-                        color="gray"
+                    <button
                         disabled={currentPage === pageCount}
                         onClick={() => changePage(pageCount)}
-                        className="hidden sm:flex transition-all duration-200 hover:scale-105"
-                        size="2"
+                        className="hidden sm:flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
                         title="Last page"
                     >
-                        <DoubleArrowRightIcon />
-                    </Button>
-                </Flex>
-            </Flex>
+                        <FiChevronsRight className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };

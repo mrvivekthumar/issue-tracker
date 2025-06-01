@@ -1,7 +1,6 @@
 import Pagination from '@/app/components/Pagination'
 import prisma from '@/prisma/client'
 import { Status } from '@prisma/client'
-import { Flex } from '@radix-ui/themes'
 import IssueTable, { columnNames, IssueQuery } from './IssueTable'
 import IssueAction from './IsuueAction'
 import { Metadata } from 'next'
@@ -35,14 +34,26 @@ const IssuesPage = async ({ searchParams }: Props) => {
     const issueCount = await prisma.issue.count({ where });
 
     return (
-        <Flex gap='5' direction='column'>
-            <IssueAction />
-            <IssueTable searchParams={searchParams} issues={issues} />
-            <Pagination itemCount={issueCount} currentPage={page} pageSize={pageSize} />
-        </Flex>
+        <div className="max-w-7xl mx-auto p-6">
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Issues</h1>
+                    <p className="text-gray-600">Track and manage all project issues</p>
+                </div>
+
+                {/* Actions */}
+                <IssueAction />
+
+                {/* Table */}
+                <IssueTable searchParams={searchParams} issues={issues} />
+
+                {/* Pagination */}
+                <Pagination itemCount={issueCount} currentPage={page} pageSize={pageSize} />
+            </div>
+        </div>
     )
 }
-
 
 //  THIS IS FOR CACHING IMPROVEMENTS method 1
 // export const revalidate = 0;
@@ -51,8 +62,8 @@ const IssuesPage = async ({ searchParams }: Props) => {
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-    title: 'Issuse Tracker - Issue List ',
-    description: 'View all Prohect Issues'
+    title: 'Issue Tracker - Issue List ',
+    description: 'View all Project Issues'
 }
 
 export default IssuesPage

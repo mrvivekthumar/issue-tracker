@@ -1,9 +1,8 @@
 'use client';
 
-import IssueSummary from "./IssueSummary";
-import IssueChart from "./IssueChart";
-import { Flex, Grid, Card, Text, Button } from "@radix-ui/themes";
-import Latestissues from "./Latestissues";
+import IssueSummary from "../IssueSummary";
+import IssueChart from "../IssueChart";
+import Latestissues from "../Latestissues";
 import { Suspense } from "react";
 import { FiTrendingUp, FiUsers, FiClock, FiTarget } from "react-icons/fi";
 import Link from "next/link";
@@ -39,7 +38,7 @@ const DashboardClient = ({ issueStats, recentActivity, performanceMetrics }: Das
 
                 {/* Quick Stats Cards */}
                 <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                    <Grid columns={{ initial: '1', sm: '2', lg: '4' }} gap="6" className="mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <QuickStatCard
                             title="Total Issues"
                             value={issueStats.total}
@@ -72,11 +71,11 @@ const DashboardClient = ({ issueStats, recentActivity, performanceMetrics }: Das
                             icon={FiUsers}
                             color="blue"
                         />
-                    </Grid>
+                    </div>
                 </div>
 
                 {/* Main Content Grid */}
-                <Grid columns={{ initial: '1', lg: '3' }} gap="8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column - Charts and Summary */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Issue Summary Cards */}
@@ -92,19 +91,19 @@ const DashboardClient = ({ issueStats, recentActivity, performanceMetrics }: Das
 
                         {/* Enhanced Chart Section */}
                         <div className="animate-slide-left" style={{ animationDelay: '0.3s' }}>
-                            <Card className="p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <Text size="5" weight="bold" className="text-gray-900 mb-2 block">
+                                        <h2 className="text-xl font-bold text-gray-900 mb-2">
                                             Issues Analytics
-                                        </Text>
-                                        <Text size="3" className="text-gray-600">
+                                        </h2>
+                                        <p className="text-gray-600">
                                             Track issue trends and patterns over time
-                                        </Text>
+                                        </p>
                                     </div>
-                                    <Button variant="outline" size="2" className="hover:scale-105 transition-transform duration-200">
+                                    <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium">
                                         View Details
-                                    </Button>
+                                    </button>
                                 </div>
                                 <Suspense fallback={<ChartSkeleton />}>
                                     <IssueChart
@@ -113,7 +112,7 @@ const DashboardClient = ({ issueStats, recentActivity, performanceMetrics }: Das
                                         inProgress={issueStats.inProgress}
                                     />
                                 </Suspense>
-                            </Card>
+                            </div>
                         </div>
 
                         {/* Performance Metrics */}
@@ -140,7 +139,7 @@ const DashboardClient = ({ issueStats, recentActivity, performanceMetrics }: Das
                             <QuickActionsCard />
                         </div>
                     </div>
-                </Grid>
+                </div>
             </div>
         </div>
     );
@@ -179,8 +178,8 @@ const QuickStatCard = ({ title, value, change, trend, icon: Icon, color }: Quick
     };
 
     return (
-        <Card className="p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-            <Flex justify="between" align="start" className="mb-4">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="flex justify-between items-start mb-4">
                 <div className={`p-3 rounded-xl ${bgClasses[color]} transform hover:scale-110 transition-transform duration-200`}>
                     <Icon className={`h-6 w-6 ${iconColorClasses[color]}`} />
                 </div>
@@ -188,31 +187,31 @@ const QuickStatCard = ({ title, value, change, trend, icon: Icon, color }: Quick
                     }`}>
                     <span>{change}</span>
                 </div>
-            </Flex>
-            <div>
-                <Text size="6" weight="bold" className="text-gray-900 block mb-1">
-                    {value.toLocaleString()}
-                </Text>
-                <Text size="3" className="text-gray-600">
-                    {title}
-                </Text>
             </div>
-        </Card>
+            <div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                    {value.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">
+                    {title}
+                </div>
+            </div>
+        </div>
     );
 };
 
 const PerformanceMetricsCard = ({ metrics }: { metrics: any }) => (
-    <Card className="p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-        <Text size="5" weight="bold" className="text-gray-900 mb-6 block">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">
             Performance Metrics
-        </Text>
+        </h3>
 
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <Text size="3" className="text-gray-600">Average Resolution Time</Text>
-                <Text size="4" weight="bold" className="text-gray-900">
+                <span className="text-gray-600">Average Resolution Time</span>
+                <span className="text-lg font-bold text-gray-900">
                     {metrics.avgResolutionTime} days
-                </Text>
+                </span>
             </div>
 
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -220,27 +219,27 @@ const PerformanceMetricsCard = ({ metrics }: { metrics: any }) => (
             </div>
 
             <div className="flex justify-between items-center">
-                <Text size="3" className="text-gray-600">Team Efficiency</Text>
-                <Text size="4" weight="bold" className="text-green-600">85%</Text>
+                <span className="text-gray-600">Team Efficiency</span>
+                <span className="text-lg font-bold text-green-600">85%</span>
             </div>
 
             <div className="flex justify-between items-center">
-                <Text size="3" className="text-gray-600">Customer Satisfaction</Text>
-                <Text size="4" weight="bold" className="text-blue-600">4.8/5</Text>
+                <span className="text-gray-600">Customer Satisfaction</span>
+                <span className="text-lg font-bold text-blue-600">4.8/5</span>
             </div>
         </div>
-    </Card>
+    </div>
 );
 
 const RecentActivityCard = ({ activity }: { activity: any[] }) => (
-    <Card className="p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
         <div className="flex justify-between items-center mb-6">
-            <Text size="5" weight="bold" className="text-gray-900">
+            <h3 className="text-xl font-bold text-gray-900">
                 Recent Activity
-            </Text>
-            <Button variant="ghost" size="2" className="hover:scale-105 transition-transform duration-200">
+            </h3>
+            <button className="text-sm text-violet-600 hover:text-violet-700 font-medium hover:scale-105 transition-all duration-200">
                 View All
-            </Button>
+            </button>
         </div>
 
         <div className="space-y-4">
@@ -248,63 +247,66 @@ const RecentActivityCard = ({ activity }: { activity: any[] }) => (
                 <div key={item.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                     <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
                     <div className="flex-1 min-w-0">
-                        <Text size="2" weight="medium" className="text-gray-900 truncate block">
+                        <div className="text-sm font-medium text-gray-900 truncate">
                             {item.title}
-                        </Text>
-                        <Text size="1" className="text-gray-500">
+                        </div>
+                        <div className="text-xs text-gray-500">
                             {item.assignedUser ? `Assigned to ${item.assignedUser}` : 'Unassigned'}
-                        </Text>
+                        </div>
                     </div>
-                    <Text size="1" className="text-gray-400 whitespace-nowrap">
+                    <div className="text-xs text-gray-400 whitespace-nowrap">
                         {new Date(item.updatedAt).toLocaleDateString()}
-                    </Text>
+                    </div>
                 </div>
             ))}
         </div>
-    </Card>
+    </div>
 );
 
 const QuickActionsCard = () => (
-    <Card className="p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-        <Text size="5" weight="bold" className="text-gray-900 mb-6 block">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">
             Quick Actions
-        </Text>
+        </h3>
 
         <div className="space-y-3">
-            <Button asChild className="w-full justify-start bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 hover:scale-105 transition-all duration-200">
-                <Link href="/issues/new">
-                    <FiTarget className="mr-2 h-4 w-4" />
-                    Create New Issue
-                </Link>
-            </Button>
+            <Link
+                href="/issues/new"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+                <FiTarget className="w-4 h-4" />
+                Create New Issue
+            </Link>
 
-            <Button asChild variant="outline" className="w-full justify-start hover:scale-105 transition-all duration-200">
-                <Link href="/issues/list">
-                    <FiClock className="mr-2 h-4 w-4" />
-                    View All Issues
-                </Link>
-            </Button>
+            <Link
+                href="/issues/list"
+                className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg hover:scale-105 transition-all duration-200"
+            >
+                <FiClock className="w-4 h-4" />
+                View All Issues
+            </Link>
 
-            <Button asChild variant="outline" className="w-full justify-start hover:scale-105 transition-all duration-200">
-                <Link href="/reports">
-                    <FiTrendingUp className="mr-2 h-4 w-4" />
-                    Generate Report
-                </Link>
-            </Button>
+            <Link
+                href="/reports"
+                className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg hover:scale-105 transition-all duration-200"
+            >
+                <FiTrendingUp className="w-4 h-4" />
+                Generate Report
+            </Link>
         </div>
-    </Card>
+    </div>
 );
 
 // Skeleton components
 const SummaryCardsSkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-6">
+            <div key={i} className="bg-white border border-gray-200 rounded-xl p-6">
                 <div className="animate-pulse">
                     <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
                     <div className="h-8 bg-gray-200 rounded w-1/2"></div>
                 </div>
-            </Card>
+            </div>
         ))}
     </div>
 );
@@ -314,7 +316,7 @@ const ChartSkeleton = () => (
 );
 
 const LatestIssuesSkeleton = () => (
-    <Card className="p-6">
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
             <div className="space-y-4">
@@ -323,7 +325,7 @@ const LatestIssuesSkeleton = () => (
                 ))}
             </div>
         </div>
-    </Card>
+    </div>
 );
 
 export default DashboardClient;
