@@ -10,19 +10,19 @@ const config: Config = {
     extend: {
       // Professional Color Palette
       colors: {
-        // Primary Brand Colors
+        // Primary Brand Colors (Violet Theme for Issue Tracker)
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
+          700: '#6d28d9',
+          800: '#5b21b6',
+          900: '#4c1d95',
+          950: '#2e1065',
         },
 
         // Success Colors
@@ -70,25 +70,10 @@ const config: Config = {
           950: '#450a0a',
         },
 
-        // Neutral Gray Scale
-        neutral: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617',
-        },
-
-        // Status Colors for Issues
+        // Issue Status Colors (simplified)
         status: {
           open: '#ef4444',      // Red
-          progress: '#f59e0b',   // Orange/Yellow
+          progress: '#f59e0b',   // Orange
           closed: '#22c55e',     // Green
           review: '#8b5cf6',     // Purple
         }
@@ -98,6 +83,7 @@ const config: Config = {
       fontFamily: {
         sans: [
           'Inter',
+          'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
           '"Segoe UI"',
@@ -107,186 +93,107 @@ const config: Config = {
           'sans-serif',
         ],
         mono: [
-          '"Fira Code"',
           '"JetBrains Mono"',
-          'Menlo',
-          'Monaco',
+          '"Fira Code"',
           'Consolas',
           '"Liberation Mono"',
+          'Menlo',
+          'Monaco',
           '"Courier New"',
           'monospace',
         ],
       },
 
-      // Consistent Spacing Scale
+      // Extended Spacing
       spacing: {
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
       },
 
-      // Professional Shadows
+      // Professional Shadow System
       boxShadow: {
         'soft': '0 2px 15px 0 rgba(0, 0, 0, 0.08)',
         'medium': '0 4px 25px 0 rgba(0, 0, 0, 0.1)',
         'strong': '0 10px 40px 0 rgba(0, 0, 0, 0.15)',
         'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
-        'glow-primary': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'glow-primary': '0 0 20px rgba(139, 92, 246, 0.3)',
         'glow-success': '0 0 20px rgba(34, 197, 94, 0.3)',
         'glow-warning': '0 0 20px rgba(245, 158, 11, 0.3)',
         'glow-error': '0 0 20px rgba(239, 68, 68, 0.3)',
       },
 
-      // Smooth Animations
+      // Clean Animation System
       animation: {
-        // Fade animations
-        'fade-in': 'fadeIn 0.6s ease-in-out',
-        'fade-in-up': 'fadeInUp 0.6s ease-out',
-        'fade-in-down': 'fadeInDown 0.6s ease-out',
-        'fade-in-left': 'fadeInLeft 0.6s ease-out',
-        'fade-in-right': 'fadeInRight 0.6s ease-out',
-
-        // Slide animations
-        'slide-up': 'slideUp 0.5s ease-out',
-        'slide-down': 'slideDown 0.5s ease-out',
-        'slide-left': 'slideLeft 0.5s ease-out',
-        'slide-right': 'slideRight 0.5s ease-out',
-
-        // Scale animations
-        'scale-in': 'scaleIn 0.3s ease-out',
-        'scale-out': 'scaleOut 0.3s ease-in',
-
-        // Bounce and elastic
-        'bounce-soft': 'bounceSoft 0.8s ease-out',
-        'elastic': 'elastic 0.8s ease-out',
-
-        // Loading animations
+        // Core animations matching globals.css
+        'fade-in': 'fadeIn 0.6s ease-out forwards',
+        'slide-up': 'slideUp 0.6s ease-out forwards',
+        'slide-left': 'slideLeft 0.6s ease-out forwards',
+        'slide-right': 'slideRight 0.6s ease-out forwards',
+        'float': 'float 3s ease-in-out infinite',
         'shimmer': 'shimmer 1.5s infinite',
+
+        // Extended animations for rich interactions
         'pulse-slow': 'pulse 3s infinite',
         'spin-slow': 'spin 3s linear infinite',
+        'bounce-gentle': 'bounceGentle 0.8s ease-out',
 
-        // Interactive animations
-        'wiggle': 'wiggle 0.5s ease-in-out',
-        'shake': 'shake 0.5s ease-in-out',
-        'float': 'float 3s ease-in-out infinite',
-
-        // Progress animations
-        'progress': 'progress 2s ease-in-out',
-        'fill-width': 'fillWidth 1s ease-out',
+        // Notification animations
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'slide-out-right': 'slideOutRight 0.3s ease-in',
       },
 
-      // Keyframes for animations
+      // Keyframes (matching globals.css exactly)
       keyframes: {
-        // Fade keyframes
         fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        fadeInUp: {
+        slideUp: {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        fadeInDown: {
-          '0%': { opacity: '0', transform: 'translateY(-20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        fadeInLeft: {
+        slideLeft: {
           '0%': { opacity: '0', transform: 'translateX(-20px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
-        fadeInRight: {
+        slideRight: {
           '0%': { opacity: '0', transform: 'translateX(20px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-
-        // Slide keyframes
-        slideUp: {
-          '0%': { transform: 'translateY(100%)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideDown: {
-          '0%': { transform: 'translateY(-100%)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideLeft: {
-          '0%': { transform: 'translateX(100%)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-        slideRight: {
-          '0%': { transform: 'translateX(-100%)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-
-        // Scale keyframes
-        scaleIn: {
-          '0%': { transform: 'scale(0.8)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        scaleOut: {
-          '0%': { transform: 'scale(1)', opacity: '1' },
-          '100%': { transform: 'scale(0.8)', opacity: '0' },
-        },
-
-        // Bounce and elastic
-        bounceSoft: {
-          '0%, 20%, 53%, 100%': { transform: 'translateY(0)' },
-          '40%, 43%': { transform: 'translateY(-15px)' },
-          '70%': { transform: 'translateY(-7px)' },
-          '90%': { transform: 'translateY(-3px)' },
-        },
-        elastic: {
-          '0%': { transform: 'scale(0)' },
-          '50%': { transform: 'scale(1.2)' },
-          '75%': { transform: 'scale(0.9)' },
-          '100%': { transform: 'scale(1)' },
-        },
-
-        // Loading animations
-        shimmer: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' },
-        },
-
-        // Interactive animations
-        wiggle: {
-          '0%, 100%': { transform: 'rotate(0deg)' },
-          '25%': { transform: 'rotate(-3deg)' },
-          '75%': { transform: 'rotate(3deg)' },
-        },
-        shake: {
-          '0%, 100%': { transform: 'translateX(0)' },
-          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-2px)' },
-          '20%, 40%, 60%, 80%': { transform: 'translateX(2px)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
         },
-
-        // Progress animations
-        progress: {
-          '0%': { width: '0%' },
-          '100%': { width: '100%' },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
-        fillWidth: {
-          '0%': { width: '0%' },
-          '100%': { width: '100%' },
+        bounceGentle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideOutRight: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(100%)', opacity: '0' },
         },
       },
 
-      // Custom Gradients
+      // Professional Gradients
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-primary': 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+        'gradient-primary': 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
         'gradient-success': 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)',
         'gradient-warning': 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
         'gradient-error': 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
         'gradient-glass': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-        'gradient-mesh': 'radial-gradient(at 40% 20%, #3b82f6 0px, transparent 50%), radial-gradient(at 80% 0%, #1d4ed8 0px, transparent 50%), radial-gradient(at 0% 50%, #22c55e 0px, transparent 50%)',
+        'gradient-mesh': 'radial-gradient(at 40% 20%, #8b5cf6 0px, transparent 50%), radial-gradient(at 80% 0%, #7c3aed 0px, transparent 50%), radial-gradient(at 0% 50%, #22c55e 0px, transparent 50%)',
       },
 
-      // Border Radius Scale
+      // Extended Border Radius
       borderRadius: {
         'xl': '12px',
         '2xl': '16px',
@@ -303,7 +210,7 @@ const config: Config = {
         '100': '100',
       },
 
-      // Custom Transitions
+      // Extended Transition Durations
       transitionDuration: {
         '400': '400ms',
         '600': '600ms',
@@ -311,25 +218,45 @@ const config: Config = {
         '1200': '1200ms',
       },
 
-      // Backdrop Blur
+      // Backdrop Effects
       backdropBlur: {
         xs: '2px',
+      },
+
+      // Screen Breakpoints (optional enhancement)
+      screens: {
+        'xs': '475px',
+        '3xl': '1600px',
       },
     },
   },
   plugins: [
     require('@tailwindcss/typography'),
-    // Add custom utilities
-    function ({ addUtilities }: any) {
-      const newUtilities = {
-        // Glass morphism effect
+
+    // Custom Utility Plugin
+    function ({ addUtilities, addComponents }: any) {
+      // Utility Classes
+      const utilities = {
+        // Glass Effects
         '.glass': {
           background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
         },
+        '.glass-dark': {
+          background: 'rgba(0, 0, 0, 0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
 
-        // Card hover effect
+        // Hover Effects
+        '.hover-lift': {
+          transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          },
+        },
         '.card-hover': {
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
@@ -338,7 +265,7 @@ const config: Config = {
           },
         },
 
-        // Button shine effect
+        // Button Effects
         '.btn-shine': {
           position: 'relative',
           overflow: 'hidden',
@@ -357,7 +284,10 @@ const config: Config = {
           },
         },
 
-        // Scroll snap
+        // Scroll Utilities
+        '.scroll-smooth': {
+          scrollBehavior: 'smooth',
+        },
         '.scroll-snap-x': {
           scrollSnapType: 'x mandatory',
         },
@@ -370,9 +300,51 @@ const config: Config = {
         '.snap-center': {
           scrollSnapAlign: 'center',
         },
-      }
+        '.snap-end': {
+          scrollSnapAlign: 'end',
+        },
 
-      addUtilities(newUtilities)
+        // Text Utilities
+        '.text-gradient': {
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+          '-webkit-background-clip': 'text',
+          '-webkit-text-fill-color': 'transparent',
+          'background-clip': 'text',
+        },
+      };
+
+      // Component Classes
+      const components = {
+        // Button Variants
+        '.btn-primary': {
+          '@apply bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg': {},
+        },
+        '.btn-secondary': {
+          '@apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors duration-200': {},
+        },
+        '.btn-success': {
+          '@apply bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200': {},
+        },
+        '.btn-danger': {
+          '@apply bg-gradient-to-r from-error-500 to-error-600 hover:from-error-600 hover:to-error-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200': {},
+        },
+
+        // Card Variants
+        '.card': {
+          '@apply bg-white rounded-xl shadow-soft border border-gray-200 hover:shadow-medium transition-all duration-300': {},
+        },
+        '.card-interactive': {
+          '@apply card hover:-translate-y-1 cursor-pointer': {},
+        },
+
+        // Input Styles
+        '.input': {
+          '@apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200': {},
+        },
+      };
+
+      addUtilities(utilities);
+      addComponents(components);
     },
   ],
 };

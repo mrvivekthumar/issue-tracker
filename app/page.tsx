@@ -1,7 +1,6 @@
 import prisma from "@/prisma/client";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { Grid, Flex, Card, Text, Badge, Button } from "@radix-ui/themes";
 import {
   FiTrendingUp,
   FiAlertCircle,
@@ -12,12 +11,9 @@ import {
   FiArrowRight,
   FiActivity,
   FiUsers,
-  FiCalendar,
   FiTarget
 } from "react-icons/fi";
 import Link from "next/link";
-
-// Import your existing components
 import IssueSummary from "./IssueSummary";
 import IssueChart from "./IssueChart";
 import Latestissues from "./Latestissues";
@@ -102,7 +98,6 @@ async function getDashboardStats(): Promise<DashboardStats> {
     const weeklyGrowth = lastWeekTotal === 0 ? 0 :
       Math.round(((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100);
 
-    // Calculate average resolution time (mock calculation)
     const avgResolutionTime = closed > 0 ? Math.round((closed * 2.5) / closed * 10) / 10 : 0;
 
     return {
@@ -134,76 +129,75 @@ async function getDashboardStats(): Promise<DashboardStats> {
 function StatCard({ title, value, icon: Icon, trend, color, description, delay = 0 }: StatCardProps) {
   const colorStyles = {
     primary: {
-      bg: 'bg-primary-50',
-      iconBg: 'bg-primary-100',
-      iconColor: 'text-primary-600',
-      valueColor: 'text-primary-700',
-      glow: 'shadow-glow-primary'
+      bg: 'bg-blue-50',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      valueColor: 'text-blue-700',
+      glow: 'hover:shadow-blue-200'
     },
     success: {
-      bg: 'bg-success-50',
-      iconBg: 'bg-success-100',
-      iconColor: 'text-success-600',
-      valueColor: 'text-success-700',
-      glow: 'shadow-glow-success'
+      bg: 'bg-green-50',
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600',
+      valueColor: 'text-green-700',
+      glow: 'hover:shadow-green-200'
     },
     warning: {
-      bg: 'bg-warning-50',
-      iconBg: 'bg-warning-100',
-      iconColor: 'text-warning-600',
-      valueColor: 'text-warning-700',
-      glow: 'shadow-glow-warning'
+      bg: 'bg-yellow-50',
+      iconBg: 'bg-yellow-100',
+      iconColor: 'text-yellow-600',
+      valueColor: 'text-yellow-700',
+      glow: 'hover:shadow-yellow-200'
     },
     error: {
-      bg: 'bg-error-50',
-      iconBg: 'bg-error-100',
-      iconColor: 'text-error-600',
-      valueColor: 'text-error-700',
-      glow: 'shadow-glow-error'
+      bg: 'bg-red-50',
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
+      valueColor: 'text-red-700',
+      glow: 'hover:shadow-red-200'
     }
   };
 
   const styles = colorStyles[color];
 
   return (
-    <Card
-      className={`p-6 border-0 shadow-soft hover:shadow-strong card-hover ${styles.bg} group animate-fade-in-up`}
+    <div
+      className={`p-6 border-0 shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 ${styles.bg} group rounded-xl`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <Flex direction="column" gap="4">
-        <Flex justify="between" align="start">
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-start">
           <div className={`p-3 rounded-2xl ${styles.iconBg} group-hover:${styles.glow} transition-all duration-300`}>
             <Icon className={`w-6 h-6 ${styles.iconColor}`} />
           </div>
           {trend && (
-            <Badge
-              color={trend.isPositive ? "green" : "red"}
-              variant="soft"
-              className="text-xs font-semibold px-2 py-1 animate-pulse-slow"
+            <span
+              className={`text-xs font-semibold px-2 py-1 rounded-full ${trend.isPositive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                }`}
             >
               {trend.isPositive ? '+' : ''}{trend.value}%
-            </Badge>
-          )}
-        </Flex>
-
-        <div className="space-y-1">
-          <Text size="5" weight="bold" className={`${styles.valueColor} block`}>
-            {value.toLocaleString()}
-          </Text>
-          <Text size="3" weight="medium" className="text-neutral-700 block">
-            {title}
-          </Text>
-          <Text size="2" className="text-neutral-500">
-            {description}
-          </Text>
-          {trend && (
-            <Text size="1" className="text-neutral-400 mt-1">
-              {trend.label}
-            </Text>
+            </span>
           )}
         </div>
-      </Flex>
-    </Card>
+
+        <div className="space-y-1">
+          <div className={`text-3xl font-bold ${styles.valueColor}`}>
+            {value.toLocaleString()}
+          </div>
+          <div className="text-lg font-medium text-gray-700">
+            {title}
+          </div>
+          <div className="text-sm text-gray-500">
+            {description}
+          </div>
+          {trend && (
+            <div className="text-xs text-gray-400 mt-1">
+              {trend.label}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -212,80 +206,78 @@ function QuickActionCard({ title, description, href, icon: Icon, variant }: Quic
   const isPrimary = variant === 'primary';
 
   return (
-    <Card className={`p-6 border-0 shadow-soft hover:shadow-strong card-hover group transition-all duration-300 ${isPrimary
-      ? 'bg-gradient-primary text-white hover:scale-105'
-      : 'bg-white hover:bg-neutral-50'
+    <div className={`p-6 border-0 shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 group rounded-xl ${isPrimary
+      ? 'bg-gradient-to-br from-violet-600 to-purple-700 text-white hover:scale-105'
+      : 'bg-white hover:bg-gray-50'
       }`}>
       <Link href={href} className="block">
-        <Flex direction="column" gap="4">
-          <div className={`p-3 rounded-2xl w-fit ${isPrimary ? 'bg-white/20' : 'bg-primary-100'
+        <div className="flex flex-col gap-4">
+          <div className={`p-3 rounded-2xl w-fit ${isPrimary ? 'bg-white/20' : 'bg-violet-100'
             }`}>
-            <Icon className={`w-6 h-6 ${isPrimary ? 'text-white' : 'text-primary-600'
+            <Icon className={`w-6 h-6 ${isPrimary ? 'text-white' : 'text-violet-600'
               }`} />
           </div>
 
           <div>
-            <Text size="4" weight="bold" className={`block mb-2 ${isPrimary ? 'text-white' : 'text-neutral-900'
+            <div className={`text-xl font-bold mb-2 ${isPrimary ? 'text-white' : 'text-gray-900'
               }`}>
               {title}
-            </Text>
-            <Text size="2" className={
-              isPrimary ? 'text-white/80' : 'text-neutral-600'
-            }>
+            </div>
+            <div className={`text-sm ${isPrimary ? 'text-white/80' : 'text-gray-600'
+              }`}>
               {description}
-            </Text>
+            </div>
           </div>
 
-          <Flex align="center" gap="2" className="mt-auto">
-            <Text size="2" weight="medium" className={
-              isPrimary ? 'text-white' : 'text-primary-600'
-            }>
+          <div className="flex items-center gap-2 mt-auto">
+            <span className={`text-sm font-medium ${isPrimary ? 'text-white' : 'text-violet-600'
+              }`}>
               Get Started
-            </Text>
-            <FiArrowRight className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${isPrimary ? 'text-white' : 'text-primary-600'
+            </span>
+            <FiArrowRight className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${isPrimary ? 'text-white' : 'text-violet-600'
               }`} />
-          </Flex>
-        </Flex>
+          </div>
+        </div>
       </Link>
-    </Card>
+    </div>
   );
 }
 
 // Professional Loading Components
 function StatsLoading() {
   return (
-    <Grid columns={{ initial: '1', sm: '2', lg: '4' }} gap="6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="p-6 animate-shimmer bg-neutral-100">
-          <Flex direction="column" gap="4">
-            <Flex justify="between">
-              <div className="w-12 h-12 bg-neutral-200 rounded-2xl animate-pulse"></div>
-              <div className="w-16 h-6 bg-neutral-200 rounded-full animate-pulse"></div>
-            </Flex>
-            <div className="space-y-2">
-              <div className="w-20 h-6 bg-neutral-200 rounded animate-pulse"></div>
-              <div className="w-32 h-4 bg-neutral-200 rounded animate-pulse"></div>
-              <div className="w-40 h-3 bg-neutral-200 rounded animate-pulse"></div>
+        <div key={i} className="p-6 bg-gray-100 rounded-xl animate-pulse">
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between">
+              <div className="w-12 h-12 bg-gray-200 rounded-2xl"></div>
+              <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
             </div>
-          </Flex>
-        </Card>
+            <div className="space-y-2">
+              <div className="w-20 h-6 bg-gray-200 rounded"></div>
+              <div className="w-32 h-4 bg-gray-200 rounded"></div>
+              <div className="w-40 h-3 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
       ))}
-    </Grid>
+    </div>
   );
 }
 
 function ContentLoading() {
   return (
-    <Card className="p-8 animate-pulse">
+    <div className="p-8 bg-white rounded-xl shadow-sm animate-pulse">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <div className="w-48 h-6 bg-neutral-200 rounded mb-2"></div>
-          <div className="w-64 h-4 bg-neutral-200 rounded"></div>
+          <div className="w-48 h-6 bg-gray-200 rounded mb-2"></div>
+          <div className="w-64 h-4 bg-gray-200 rounded"></div>
         </div>
-        <div className="w-32 h-10 bg-neutral-200 rounded"></div>
+        <div className="w-32 h-10 bg-gray-200 rounded"></div>
       </div>
-      <div className="w-full h-80 bg-neutral-200 rounded-xl"></div>
-    </Card>
+      <div className="w-full h-80 bg-gray-200 rounded-xl"></div>
+    </div>
   );
 }
 
@@ -294,58 +286,56 @@ export default async function Home() {
   const stats = await getDashboardStats();
 
   return (
-    <div className="min-h-screen bg-gradient-mesh">
-      {/* Hero Section with Glass Effect */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-primary opacity-90"></div>
-        <div className="relative glass backdrop-blur-lg border-0">
-          <div className="max-w-7xl mx-auto px-6 py-16">
-            <div className="text-center animate-fade-in">
-              <Badge
-                color="blue"
-                variant="soft"
-                className="mb-6 px-4 py-2 text-sm font-medium bg-white/20 text-white border-white/30"
-              >
-                <FiActivity className="w-4 h-4 mr-2" />
-                Production Ready Dashboard
-              </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-violet-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section with Glass Effect */}
+        <div className="relative overflow-hidden rounded-3xl mb-12">
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-700 opacity-90"></div>
+          <div className="relative bg-white/10 backdrop-blur-lg border-0 rounded-3xl">
+            <div className="px-6 py-16">
+              <div className="text-center">
+                <span className="inline-flex items-center gap-2 mb-6 px-4 py-2 text-sm font-medium bg-white/20 text-white border border-white/30 rounded-full">
+                  <FiActivity className="w-4 h-4" />
+                  Production Ready Dashboard
+                </span>
 
-              <Text size="9" weight="bold" className="text-white block mb-4 drop-shadow-lg">
-                Issue Tracker Dashboard
-              </Text>
+                <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
+                  Issue Tracker Dashboard
+                </h1>
 
-              <Text size="5" className="text-white/90 max-w-3xl mx-auto block mb-8 leading-relaxed">
-                Monitor, track, and resolve issues efficiently with real-time insights,
-                advanced analytics, and intelligent automation
-              </Text>
+                <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
+                  Monitor, track, and resolve issues efficiently with real-time insights,
+                  advanced analytics, and intelligent automation
+                </p>
 
-              <Flex gap="4" justify="center" className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                <Button asChild size="4" className="bg-white text-primary-600 hover:bg-white/90 btn-shine font-semibold shadow-strong">
-                  <Link href="/issues/new">
-                    <FiPlus className="w-5 h-5 mr-2" />
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link
+                    href="/issues/new"
+                    className="inline-flex items-center gap-2 bg-white text-violet-600 hover:bg-white/90 px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    <FiPlus className="w-5 h-5" />
                     Create New Issue
                   </Link>
-                </Button>
-                <Button asChild variant="outline" size="4" className="border-white/30 text-white hover:bg-white/10 font-semibold">
-                  <Link href="/issues/list">
+                  <Link
+                    href="/issues/list"
+                    className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+                  >
                     View All Issues
-                    <FiArrowRight className="w-5 h-5 ml-2" />
+                    <FiArrowRight className="w-5 h-5" />
                   </Link>
-                </Button>
-              </Flex>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Floating Elements */}
+          <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-float"></div>
+          <div className="absolute bottom-20 right-10 w-24 h-24 bg-white/10 rounded-full blur-lg animate-float" style={{ animationDelay: '1s' }}></div>
         </div>
 
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-24 h-24 bg-white/10 rounded-full blur-lg animate-float" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-10 pb-16">
         {/* Statistics Cards */}
         <Suspense fallback={<StatsLoading />}>
-          <Grid columns={{ initial: '1', sm: '2', lg: '4' }} gap="6" className="mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             <StatCard
               title="Total Issues"
               value={stats.total}
@@ -391,33 +381,33 @@ export default async function Home() {
               description="Successfully completed"
               delay={300}
             />
-          </Grid>
+          </div>
         </Suspense>
 
         {/* Main Content Grid */}
-        <Grid columns={{ initial: '1', lg: '3' }} gap="8" className="mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           {/* Left Column - Analytics */}
           <div className="lg:col-span-2 space-y-8">
             {/* Issue Distribution */}
-            <Card className="p-8 border-0 shadow-soft bg-white/80 backdrop-blur-sm animate-fade-in-left">
-              <Flex justify="between" align="center" className="mb-8">
+            <div className="p-8 border-0 shadow-sm bg-white/80 backdrop-blur-sm rounded-xl">
+              <div className="flex justify-between items-center mb-8">
                 <div>
-                  <Text size="7" weight="bold" className="text-neutral-900 block mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
                     Issue Distribution
-                  </Text>
-                  <Text size="4" className="text-neutral-600">
+                  </h2>
+                  <p className="text-gray-600">
                     Overview of current issue status breakdown
-                  </Text>
+                  </p>
                 </div>
-                <Badge color="blue" variant="soft" className="px-3 py-1">
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
                   Live Data
-                </Badge>
-              </Flex>
+                </span>
+              </div>
 
               <Suspense fallback={
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="p-6 bg-neutral-100 rounded-xl animate-pulse">
+                    <div key={i} className="p-6 bg-gray-100 rounded-xl animate-pulse">
                       <div className="w-full h-20"></div>
                     </div>
                   ))}
@@ -429,24 +419,24 @@ export default async function Home() {
                   inProgress={stats.inProgress}
                 />
               </Suspense>
-            </Card>
+            </div>
 
             {/* Analytics Chart */}
-            <Card className="p-8 border-0 shadow-soft bg-white/80 backdrop-blur-sm animate-fade-in-left" style={{ animationDelay: '200ms' }}>
-              <Flex justify="between" align="center" className="mb-8">
+            <div className="p-8 border-0 shadow-sm bg-white/80 backdrop-blur-sm rounded-xl">
+              <div className="flex justify-between items-center mb-8">
                 <div>
-                  <Text size="7" weight="bold" className="text-neutral-900 block mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
                     Performance Analytics
-                  </Text>
-                  <Text size="4" className="text-neutral-600">
+                  </h2>
+                  <p className="text-gray-600">
                     Visual insights into issue resolution patterns
-                  </Text>
+                  </p>
                 </div>
-                <Button variant="outline" size="3" className="btn-shine">
-                  <FiTrendingUp className="w-4 h-4 mr-2" />
+                <button className="inline-flex items-center gap-2 border border-gray-300 hover:border-gray-400 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105">
+                  <FiTrendingUp className="w-4 h-4" />
                   Export Report
-                </Button>
-              </Flex>
+                </button>
+              </div>
 
               <Suspense fallback={<ContentLoading />}>
                 <IssueChart
@@ -455,25 +445,25 @@ export default async function Home() {
                   inProgress={stats.inProgress}
                 />
               </Suspense>
-            </Card>
+            </div>
           </div>
 
           {/* Right Column - Latest Issues & Actions */}
           <div className="space-y-8">
             {/* Latest Issues */}
-            <div className="animate-fade-in-right">
+            <div>
               <Suspense fallback={<ContentLoading />}>
                 <Latestissues />
               </Suspense>
             </div>
 
             {/* Quick Actions */}
-            <div className="space-y-6 animate-fade-in-right" style={{ animationDelay: '400ms' }}>
-              <Text size="6" weight="bold" className="text-neutral-900 block mb-6">
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900">
                 Quick Actions
-              </Text>
+              </h3>
 
-              <Grid gap="4">
+              <div className="grid gap-4">
                 <QuickActionCard
                   title="Create Issue"
                   description="Report a new issue or bug for tracking"
@@ -497,40 +487,40 @@ export default async function Home() {
                   icon={FiUsers}
                   variant="secondary"
                 />
-              </Grid>
+              </div>
             </div>
 
             {/* Performance Metrics */}
-            <Card className="p-6 border-0 shadow-soft bg-gradient-success text-white animate-fade-in-right" style={{ animationDelay: '600ms' }}>
-              <Text size="5" weight="bold" className="text-white block mb-6">
+            <div className="p-6 border-0 shadow-sm bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl">
+              <h3 className="text-xl font-bold text-white mb-6">
                 Performance Metrics
-              </Text>
+              </h3>
 
               <div className="space-y-4">
-                <Flex justify="between" align="center">
-                  <Text size="3" className="text-white/90">Average Resolution Time</Text>
-                  <Text size="4" weight="bold" className="text-white">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/90">Average Resolution Time</span>
+                  <span className="text-xl font-bold text-white">
                     {stats.avgResolutionTime} days
-                  </Text>
-                </Flex>
-
-                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                  <div className="bg-white h-2 rounded-full animate-fill-width" style={{ width: '75%' }}></div>
+                  </span>
                 </div>
 
-                <Flex justify="between" align="center">
-                  <Text size="3" className="text-white/90">Team Efficiency</Text>
-                  <Text size="4" weight="bold" className="text-white">92%</Text>
-                </Flex>
+                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                  <div className="bg-white h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+                </div>
 
-                <Flex justify="between" align="center">
-                  <Text size="3" className="text-white/90">Active Users</Text>
-                  <Text size="4" weight="bold" className="text-white">{stats.activeUsers}</Text>
-                </Flex>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/90">Team Efficiency</span>
+                  <span className="text-xl font-bold text-white">92%</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-white/90">Active Users</span>
+                  <span className="text-xl font-bold text-white">{stats.activeUsers}</span>
+                </div>
               </div>
-            </Card>
+            </div>
           </div>
-        </Grid>
+        </div>
       </div>
     </div>
   );
