@@ -1,3 +1,4 @@
+// 🚀 ALTERNATIVE: Even More Optimized Version
 "use client";
 import ErrorMessage from '@/app/components/ErrorMessage';
 import { IssueSchema } from '@/app/validationSchemas';
@@ -6,7 +7,7 @@ import { Issue } from '@prisma/client';
 import axios from 'axios';
 import "easymde/dist/easymde.min.css";
 import { useRouter } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import SimpleMDE from "react-simplemde-editor";
 import { z } from 'zod';
@@ -26,7 +27,7 @@ const IssueForm = ({ issue }: IssueFormProps) => {
         handleSubmit,
         formState: { errors, isValid, isDirty },
         reset,
-        watch
+        getValues // 🔧 FIX: Use getValues instead of watch for progress calculation
     } = useForm<IssueFormData>({
         resolver: zodResolver(IssueSchema),
         defaultValues: {
@@ -41,8 +42,48 @@ const IssueForm = ({ issue }: IssueFormProps) => {
     const [error, setError] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // Watch form values for auto-save functionality
-    const watchedValues = watch();
+    // 🔧 FIX: Use ref to track progress updates without causing re-renders
+    const [progress, setProgress] = useState(0);
+    const progressUpdateRef = useRef<NodeJS.Timeout>();
+
+    // 🔧 FIX: Debounced progress calculation
+    const updateProgress = useCallback(() => {
+        if (progressUpdateRef.current) {
+            clearTimeout(progressUpdateRef.current);
+        }
+
+        progressUpdateRef.current = setTimeout(() => {
+            const values = getValues();
+            const fields = ['title', 'description'] as const;
+            const filledFields = fields.filter(field => values[field]?.toString().trim());
+            setProgress((filledFields.length / fields.length) * 100);
+        }, 300); // Debounce for 300ms
+    }, [getValues]);
+
+    // 🔧 FIX: Memoized SimpleMDE options to prevent re-initialization
+    const simpleMDEOptions = useMemo(() => ({
+        minHeight: '250px',
+        maxHeight: '500px',
+        toolbar: [
+            'bold', 'italic', 'heading', 'strikethrough', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', 'table', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+        ],
+        status: ['lines', 'words', 'cursor'],
+        spellChecker: false,
+        styleSelectedText: false,
+        autofocus: false,
+        placeholder: "Describe the issue in detail...",
+        autosave: {
+            enabled: false
+        },
+        // 🔧 FIX: Key options to prevent re-renders
+        forceSync: true,
+        hideIcons: [],
+        shortcuts: {}
+    }), []);
 
     const onSubmit = useCallback(async (data: IssueFormData) => {
         try {
@@ -101,6 +142,7 @@ const IssueForm = ({ issue }: IssueFormProps) => {
     const handleReset = useCallback(() => {
         reset();
         setError('');
+        setProgress(0);
         toast.success('Form reset successfully');
     }, [reset]);
 
@@ -111,13 +153,6 @@ const IssueForm = ({ issue }: IssueFormProps) => {
         }
         router.back();
     }, [isDirty, router]);
-
-    // Calculate form completion percentage
-    const completionPercentage = () => {
-        const fields = ['title', 'description'];
-        const filledFields = fields.filter(field => watchedValues[field as keyof IssueFormData]?.toString().trim());
-        return (filledFields.length / fields.length) * 100;
-    };
 
     if (showSuccess) {
         return (
@@ -155,7 +190,7 @@ const IssueForm = ({ issue }: IssueFormProps) => {
                     <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         <span className="text-sm font-medium text-gray-700">
-                            {Math.round(completionPercentage())}% Complete
+                            {Math.round(progress)}% Complete
                         </span>
                     </div>
                 </div>
@@ -164,7 +199,7 @@ const IssueForm = ({ issue }: IssueFormProps) => {
                 <div className="w-full bg-gray-200 rounded-full h-2 mb-6 overflow-hidden">
                     <div
                         className="bg-gradient-to-r from-violet-500 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out"
-                        style={{ width: `${completionPercentage()}%` }}
+                        style={{ width: `${progress}%` }}
                     />
                 </div>
             </div>
@@ -187,7 +222,9 @@ const IssueForm = ({ issue }: IssueFormProps) => {
                         </label>
                         <input
                             id="title"
-                            {...register('title')}
+                            {...register('title', {
+                                onChange: updateProgress // 🔧 FIX: Only update progress on change
+                            })}
                             placeholder="Enter a clear, descriptive title..."
                             className={`w-full px-4 py-3 text-lg border-2 rounded-lg transition-all duration-200 focus:outline-none ${errors.title
                                 ? 'border-red-300 focus:border-red-500 bg-red-50'
@@ -213,25 +250,13 @@ const IssueForm = ({ issue }: IssueFormProps) => {
                             <Controller
                                 control={control}
                                 name="description"
-                                render={({ field }) => (
+                                render={({ field: { onChange, value, ...field } }) => (
                                     <SimpleMDE
                                         {...field}
-                                        placeholder="Describe the issue in detail. Include steps to reproduce, expected behavior, and any relevant context..."
-                                        options={{
-                                            minHeight: '250px',
-                                            maxHeight: '500px',
-                                            toolbar: [
-                                                'bold', 'italic', 'heading', 'strikethrough', '|',
-                                                'quote', 'unordered-list', 'ordered-list', '|',
-                                                'link', 'image', 'table', '|',
-                                                'preview', 'side-by-side', 'fullscreen', '|',
-                                                'guide'
-                                            ],
-                                            status: ['lines', 'words', 'cursor'],
-                                            spellChecker: false,
-                                            styleSelectedText: false,
-                                            autofocus: false,
-                                            placeholder: "Describe the issue in detail...",
+                                        value={value}
+                                        onChange={(val) => {
+                                            onChange(val);
+                                            updateProgress(); // 🔧 FIX: Debounced progress update
                                         }}
                                     />
                                 )}

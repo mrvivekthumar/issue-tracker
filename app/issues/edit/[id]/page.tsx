@@ -5,12 +5,14 @@ import { Status } from '@prisma/client';
 import EditIssueClient from '../../[id]/EditIssueClient ';
 
 interface Props {
-    params: { id: string }
+    params: Promise<{ id: string }> // Change this from params: { id: string }
 }
 
 const EditIssuePage = async ({ params }: Props) => {
+    const { id } = await params; // Await the params first
+
     const issue = await prisma.issue.findUnique({
-        where: { id: parseInt(params.id) }
+        where: { id: parseInt(id) } // Now safe to use
     });
 
     if (!issue) {

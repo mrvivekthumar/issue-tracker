@@ -1,4 +1,4 @@
-// app/issues/[id]/IssueDetailsClient.tsx - Fixed with proper Status type
+// app/issues/[id]/IssueDetailsClient.tsx - UPDATED to pass props
 'use client';
 
 import { Status } from '@prisma/client';
@@ -64,7 +64,12 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Actions</h3>
                                 <div className="space-y-3">
                                     <EditIssueButton issueId={issue.id} />
-                                    <DeleteIssueButton issueId={issue.id} />
+                                    {/* 🔧 UPDATED: Pass additional props for better error handling */}
+                                    <DeleteIssueButton
+                                        issueId={issue.id}
+                                        issueTitle={issue.title}
+                                        issueStatus={issue.status}
+                                    />
                                 </div>
                             </div>
 
@@ -78,7 +83,10 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Status:</span>
-                                        <span className="font-medium text-gray-900">
+                                        <span className={`font-medium ${issue.status === 'OPEN' ? 'text-red-600' :
+                                            issue.status === 'IN_PROGRESS' ? 'text-yellow-600' :
+                                                'text-green-600'
+                                            }`}>
                                             {issue.status.replace('_', ' ')}
                                         </span>
                                     </div>
@@ -86,8 +94,31 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                         <span className="text-gray-600">Priority:</span>
                                         <span className="font-medium text-orange-600">Medium</span>
                                     </div>
+                                    {/* 🔧 ADDED: Deletion status indicator */}
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Deletable:</span>
+                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${issue.status === 'IN_PROGRESS'
+                                            ? 'bg-red-100 text-red-700'
+                                            : 'bg-green-100 text-green-700'
+                                            }`}>
+                                            {issue.status === 'IN_PROGRESS' ? 'Protected' : 'Yes'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* 🔧 ADDED: Status change helper */}
+                            {issue.status === 'IN_PROGRESS' && (
+                                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                                    <h3 className="text-sm font-semibold text-orange-800 mb-2">Can't Delete?</h3>
+                                    <p className="text-xs text-orange-700 mb-3">
+                                        Issues in progress are protected from deletion. Change the status first.
+                                    </p>
+                                    <div className="text-xs text-orange-600">
+                                        <strong>Tip:</strong> Use the Edit button to change status to OPEN or CLOSED
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

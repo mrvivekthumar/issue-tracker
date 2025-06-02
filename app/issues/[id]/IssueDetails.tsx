@@ -1,7 +1,31 @@
+// app/issues/[id]/IssueDetails.tsx - FIXED VERSION
 import IssueStatusBadge from '@/app/components/IssueStatusBadge'
 import { Issue } from '@prisma/client'
 import ReactMarkdown from 'react-markdown'
 import { FiCalendar, FiClock } from 'react-icons/fi'
+
+// 🔧 BEST SOLUTION: Server-safe date formatting
+function formatDateSafe(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+    // Use a consistent format that works on both server and client
+    const year = dateObj.getFullYear();
+    const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+    const day = dateObj.getDate();
+
+    return `${month} ${day}, ${year}`;
+}
+
+// 🔧 Alternative: Use ISO string formatting for complete consistency
+function formatDateISO(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    }).format(dateObj);
+}
 
 const IssueDetails = ({ issue }: { issue: Issue }) => {
     return (
@@ -14,16 +38,18 @@ const IssueDetails = ({ issue }: { issue: Issue }) => {
 
                 <div className="flex flex-wrap items-center gap-4">
                     <IssueStatusBadge status={issue.status} />
+
                     <div className="flex items-center gap-2 text-gray-600">
                         <FiCalendar className="w-4 h-4" />
                         <span className="text-sm font-medium">
-                            Created on {issue.createdAt.toDateString()}
+                            Created on {formatDateSafe(issue.createdAt)}
                         </span>
                     </div>
+
                     <div className="flex items-center gap-2 text-gray-600">
                         <FiClock className="w-4 h-4" />
                         <span className="text-sm">
-                            Updated {new Date(issue.updatedAt).toLocaleDateString()}
+                            Updated {formatDateSafe(issue.updatedAt)}
                         </span>
                     </div>
                 </div>

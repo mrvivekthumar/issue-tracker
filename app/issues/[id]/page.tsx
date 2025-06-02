@@ -9,7 +9,7 @@ import IssueDetailsClient from './IssueDetailsClient';
 import { cache } from 'react';
 
 interface Props {
-    params: { id: string }
+    params: Promise<{ id: string }> // Change this from params: { id: string }
 }
 
 // Cache the issue details so database load can be reduced
@@ -23,12 +23,15 @@ const fetchUser = cache((issueId: number) =>
 );
 
 const IssueDetailPage = async ({ params }: Props) => {
+    const { id } = await params; // Await the params first
+
     const session = await getServerSession(authOptions);
+
     if (!session) {
         return NextResponse.json({}, { status: 401 })
     }
 
-    const issue = await fetchUser(parseInt(params.id));
+    const issue = await fetchUser(parseInt(id)); // Now safe to use
 
     if (!issue) {
         notFound();
@@ -56,7 +59,8 @@ const IssueDetailPage = async ({ params }: Props) => {
 }
 
 export async function generateMetadata({ params }: Props) {
-    const issue = await fetchUser(parseInt(params.id));
+    const { id } = await params; // Await here too!
+    const issue = await fetchUser(parseInt(id));
 
     return {
         title: issue?.title,

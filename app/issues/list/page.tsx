@@ -1,3 +1,4 @@
+// app/issues/list/page.tsx - FIXED VERSION
 import Pagination from '@/app/components/Pagination'
 import prisma from '@/prisma/client'
 import { Status } from '@prisma/client'
@@ -6,22 +7,27 @@ import IssueAction from './IsuueAction'
 import { Metadata } from 'next'
 
 interface Props {
-    searchParams: IssueQuery
+    searchParams: Promise<IssueQuery> // Now it's a Promise!
 }
 
 const IssuesPage = async ({ searchParams }: Props) => {
+    // STEP 1: Await the searchParams first
+    const params = await searchParams;
 
     const statuses = Object.values(Status);
     console.log("statuses is : ", statuses);
-    const status = statuses.includes(searchParams?.status) ? searchParams.status : undefined;
+
+    // STEP 2: Now safely access the properties
+    const status = statuses.includes(params?.status) ? params.status : undefined;
     console.log("Status is : ", status);
+
     const where = { status };
-    const page = parseInt(searchParams.page) || 1;
+    const page = parseInt(params.page) || 1;
     const pageSize = 10;
 
     const orderBy = columnNames
-        .includes(searchParams.orderBy)
-        ? { [searchParams.orderBy]: 'asc' }
+        .includes(params.orderBy)
+        ? { [params.orderBy]: 'asc' }
         : undefined;
 
     const issues = await prisma.issue.findMany({
@@ -32,6 +38,14 @@ const IssuesPage = async ({ searchParams }: Props) => {
     });
 
     const issueCount = await prisma.issue.count({ where });
+
+    // STEP 3: Create a serializable object for client components
+    const serializedParams: IssueQuery = {
+        page: params.page || '1',
+        status: params.status,
+        orderBy: params.orderBy,
+        sortOrder: params.sortOrder
+    };
 
     return (
         <div className="max-w-7xl mx-auto p-6">
@@ -45,8 +59,8 @@ const IssuesPage = async ({ searchParams }: Props) => {
                 {/* Actions */}
                 <IssueAction />
 
-                {/* Table */}
-                <IssueTable searchParams={searchParams} issues={issues} />
+                {/* Table - Pass serialized params */}
+                <IssueTable searchParams={serializedParams} issues={issues} />
 
                 {/* Pagination */}
                 <Pagination itemCount={issueCount} currentPage={page} pageSize={pageSize} />
@@ -55,10 +69,7 @@ const IssuesPage = async ({ searchParams }: Props) => {
     )
 }
 
-//  THIS IS FOR CACHING IMPROVEMENTS method 1
-// export const revalidate = 0;
-
-//  THIS IS FOR CACHING IMPROVEMENTS method 2
+// Keep the existing cache and metadata exports
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {

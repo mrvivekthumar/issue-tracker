@@ -1,3 +1,4 @@
+// app/issues/list/IssueTable.tsx - FIXED VERSION
 import { IssuesStatusBadge } from '@/app/components'
 import { Issue, Status } from '@prisma/client'
 import { FiArrowUp, FiArrowDown, FiEye, FiEdit, FiClock, FiUser } from 'react-icons/fi'
@@ -11,7 +12,7 @@ export interface IssueQuery {
 }
 
 interface Props {
-    searchParams: IssueQuery
+    searchParams: IssueQuery // Now receiving plain object, not Promise
     issues: Issue[]
     loading?: boolean
 }
@@ -29,7 +30,7 @@ const IssueTable = ({ searchParams, issues, loading = false }: Props) => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50   border-b border-gray-200">
+                    <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             {columns.map((column) => (
                                 <th
@@ -38,8 +39,11 @@ const IssueTable = ({ searchParams, issues, loading = false }: Props) => {
                                 >
                                     <Link
                                         href={{
+                                            pathname: '/issues/list',
                                             query: {
-                                                ...searchParams,
+                                                // STEP 4: Create a plain object manually
+                                                ...(searchParams.status && { status: searchParams.status }),
+                                                ...(searchParams.page && { page: searchParams.page }),
                                                 orderBy: column.value,
                                                 sortOrder: searchParams.orderBy === column.value && searchParams.sortOrder === 'asc' ? 'desc' : 'asc'
                                             }
@@ -49,7 +53,10 @@ const IssueTable = ({ searchParams, issues, loading = false }: Props) => {
                                         <span>{column.label}</span>
                                         {column.value === searchParams.orderBy && (
                                             <div className="text-violet-600">
-                                                {searchParams.sortOrder === 'desc' ? <FiArrowDown className="w-4 h-4" /> : <FiArrowUp className="w-4 h-4" />}
+                                                {searchParams.sortOrder === 'desc' ?
+                                                    <FiArrowDown className="w-4 h-4" /> :
+                                                    <FiArrowUp className="w-4 h-4" />
+                                                }
                                             </div>
                                         )}
                                         {column.value !== searchParams.orderBy && (
