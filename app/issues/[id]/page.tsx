@@ -1,23 +1,28 @@
+// app/issues/[id]/page.tsx - Fixed with proper Status handling
 import authOptions from '@/app/auth/authOptions';
 import prisma from '@/prisma/client';
 import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
 import { NextResponse } from 'next/server';
-import AssigneeSelect from './AssigneeSelect';
-import DeleteIssueButton from './DeleteIssueButton';
-import EditIssueButton from './EditIssueButton';
-import IssueDetails from './IssueDetails';
+import { Status } from '@prisma/client';
+import IssueDetailsClient from './IssueDetailsClient';
 import { cache } from 'react';
 
 interface Props {
     params: { id: string }
 }
 
-// This fuction will cache the issue details so database load can be removed
-const fetchUser = cache((issuedId: number) => prisma.issue.findUnique({ where: { id: issuedId } }))
+// Cache the issue details so database load can be reduced
+const fetchUser = cache((issueId: number) =>
+    prisma.issue.findUnique({
+        where: { id: issueId },
+        include: {
+            assignedToUser: true
+        }
+    })
+);
 
 const IssueDetailPage = async ({ params }: Props) => {
-
     const session = await getServerSession(authOptions);
     if (!session) {
         return NextResponse.json({}, { status: 401 })
@@ -29,59 +34,25 @@ const IssueDetailPage = async ({ params }: Props) => {
         notFound();
     }
 
-    return (
-        <div className="max-w-7xl mx-auto p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                {/* Main Content */}
-                <div className="lg:col-span-4">
-                    <IssueDetails issue={issue} />
-                </div>
+    // Serialize the issue object for Client Component
+    // Status enum values are already strings, so they're serializable
+    const serializedIssue = {
+        id: issue.id,
+        title: issue.title,
+        description: issue.description,
+        status: issue.status as Status, // Keep as Status enum type
+        createdAt: issue.createdAt.toISOString(),
+        updatedAt: issue.updatedAt.toISOString(),
+        assignedToUserId: issue.assignedToUserId,
+        assignedToUser: issue.assignedToUser ? {
+            id: issue.assignedToUser.id,
+            name: issue.assignedToUser.name,
+            email: issue.assignedToUser.email,
+            image: issue.assignedToUser.image
+        } : null
+    };
 
-                {/* Sidebar Actions */}
-                {session && (
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-6 space-y-4">
-                            {/* Assignee Section */}
-                            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Assignee</h3>
-                                <AssigneeSelect issue={issue} />
-                            </div>
-
-                            {/* Actions Section */}
-                            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Actions</h3>
-                                <div className="space-y-3">
-                                    <EditIssueButton issueId={issue.id} />
-                                    <DeleteIssueButton issueId={issue.id} />
-                                </div>
-                            </div>
-
-                            {/* Issue Info */}
-                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Issue Info</h3>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">ID:</span>
-                                        <span className="font-mono text-gray-900">#{issue.id}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Status:</span>
-                                        <span className="font-medium text-gray-900">
-                                            {issue.status.replace('_', ' ')}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Priority:</span>
-                                        <span className="font-medium text-orange-600">Medium</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    )
+    return <IssueDetailsClient issue={serializedIssue} hasSession={!!session} />;
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -89,7 +60,7 @@ export async function generateMetadata({ params }: Props) {
 
     return {
         title: issue?.title,
-        description: "Details of Issue" + issue?.id
+        description: "Details of Issue " + issue?.id
     }
 }
 

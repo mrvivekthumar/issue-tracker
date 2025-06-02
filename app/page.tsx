@@ -160,58 +160,45 @@ function StatCard({ title, value, icon: Icon, trend, color, description, delay =
 
   const styles = colorStyles[color];
 
-  const TailwindDebugTest = () => {
-    return (
-      <div className="p-8 bg-red-500 text-white rounded-lg m-4">
-        <h1 className="text-2xl font-bold mb-4">Tailwind CSS Test</h1>
-        <p className="text-lg">If you see this with red background and white text, Tailwind is working!</p>
-        <button className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors">
-          Test Button
-        </button>
-      </div>
-    );
-  };
-
   return (
 
-    <TailwindDebugTest />
-    // <div
-    //   className={`p-6 border-0 shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 ${styles.bg} group rounded-xl`}
-    //   style={{ animationDelay: `${delay}ms` }}
-    // >
-    //   <div className="flex flex-col gap-4">
-    //     <div className="flex justify-between items-start">
-    //       <div className={`p-3 rounded-2xl ${styles.iconBg} group-hover:${styles.glow} transition-all duration-300`}>
-    //         <Icon className={`w-6 h-6 ${styles.iconColor}`} />
-    //       </div>
-    //       {trend && (
-    //         <span
-    //           className={`text-xs font-semibold px-2 py-1 rounded-full ${trend.isPositive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-    //             }`}
-    //         >
-    //           {trend.isPositive ? '+' : ''}{trend.value}%
-    //         </span>
-    //       )}
-    //     </div>
+    <div
+      className={`p-6 border-0 shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 ${styles.bg} group rounded-xl`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-start">
+          <div className={`p-3 rounded-2xl ${styles.iconBg} group-hover:${styles.glow} transition-all duration-300`}>
+            <Icon className={`w-6 h-6 ${styles.iconColor}`} />
+          </div>
+          {trend && (
+            <span
+              className={`text-xs font-semibold px-2 py-1 rounded-full ${trend.isPositive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                }`}
+            >
+              {trend.isPositive ? '+' : ''}{trend.value}%
+            </span>
+          )}
+        </div>
 
-    //     <div className="space-y-1">
-    //       <div className={`text-3xl font-bold ${styles.valueColor}`}>
-    //         {value.toLocaleString()}
-    //       </div>
-    //       <div className="text-lg font-medium text-gray-700">
-    //         {title}
-    //       </div>
-    //       <div className="text-sm text-gray-500">
-    //         {description}
-    //       </div>
-    //       {trend && (
-    //         <div className="text-xs text-gray-400 mt-1">
-    //           {trend.label}
-    //         </div>
-    //       )}
-    //     </div>
-    //   </div>
-    // </div>
+        <div className="space-y-1">
+          <div className={`text-3xl font-bold ${styles.valueColor}`}>
+            {value.toLocaleString()}
+          </div>
+          <div className="text-lg font-medium text-gray-700">
+            {title}
+          </div>
+          <div className="text-sm text-gray-500">
+            {description}
+          </div>
+          {trend && (
+            <div className="text-xs text-gray-400 mt-1">
+              {trend.label}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

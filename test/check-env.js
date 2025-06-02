@@ -7,10 +7,7 @@ console.log('🔍 Checking all environment variables...\n');
 
 // Check DATABASE_URL variations
 const dbUrls = [
-    'DATABASE_URL',
-    'DIRECT_URL',
-    'POSTGRES_URL',
-    'SUPABASE_URL'
+    'DATABASE_URL'
 ];
 
 dbUrls.forEach(key => {

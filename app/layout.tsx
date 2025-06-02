@@ -24,7 +24,6 @@ export default function RootLayout({
         <QueryClientProvider>
           <AuthProvider>
             <div className="min-h-full">
-              {/* Your original components (commented out for now) */}
               <Navbar />
               <main className="flex-1">
                 {children}
