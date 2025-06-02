@@ -20,7 +20,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode; }>) {
   return (
     <html lang="en" className="h-full">
-      <body className="font-sans h-full bg-gray-50">
+      <body className={`${inter.variable} font-sans h-full bg-gray-50`}>
         <QueryClientProvider>
           <AuthProvider>
             <div className="min-h-full">

@@ -11,19 +11,32 @@ const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const profileMenuRef = useRef<HTMLDivElement>(null);
 
-    // Handle scroll effect
+    // Prevent hydration issues
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Handle scroll effect - only after component mounts
+    useEffect(() => {
+        if (!mounted) return;
+
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 0);
+            if (typeof window !== 'undefined') {
+                setIsScrolled(window.scrollY > 0);
+            }
         };
+
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [mounted]);
 
     // Close menus when clicking outside
     useEffect(() => {
+        if (!mounted) return;
+
         const handleClickOutside = (event: MouseEvent) => {
             if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
                 setIsProfileMenuOpen(false);
@@ -35,7 +48,37 @@ const Navbar = () => {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isMobileMenuOpen]);
+    }, [isMobileMenuOpen, mounted]);
+
+    // Show consistent loading state during hydration
+    if (!mounted) {
+        return (
+            <nav className="bg-white backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        {/* Logo and Brand */}
+                        <div className="flex items-center gap-4">
+                            <Link href="/" className="flex items-center space-x-3 text-violet-600">
+                                <FaBug className="h-8 w-8" />
+                                <div className="hidden sm:block">
+                                    <span className="text-xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                                        IssueTracker
+                                    </span>
+                                    <div className="text-xs text-gray-500 -mt-1">Pro</div>
+                                </div>
+                            </Link>
+                        </div>
+
+                        {/* Loading skeleton for auth */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                            <div className="hidden sm:block w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+    }
 
     return (
         <nav className={classnames(
@@ -234,8 +277,14 @@ interface AuthStatusProps {
 
 const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef }: AuthStatusProps) => {
     const { status, data: session } = useSession();
+    const [mounted, setMounted] = useState(false);
 
-    if (status === "loading") {
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Prevent hydration mismatch by showing consistent loading state
+    if (!mounted || status === "loading") {
         return (
             <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>

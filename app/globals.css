@@ -5,18 +5,16 @@
 body {
   margin: 0;
   padding: 0;
-}
-
-.debug-info {
-  background-color: #f0f9ff !important;
-  border: 2px solidrgb(14, 14, 15) !important;
-}
-
-body {
   color: rgb(var(--foreground-rgb));
   font-feature-settings: 'rlig' 1, 'calt' 1;
 }
 
+.debug-info {
+  background-color: #f0f9ff !important;
+  border: 2px solid rgb(14, 14, 15) !important; /* Fixed: added space after "solid" */
+}
+
+/* Custom Animations - Now moved to tailwind.config.js for better organization */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -101,37 +99,8 @@ body {
   }
 }
 
+/* Custom Utility Classes */
 @layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-    opacity: 0;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.6s ease-out forwards;
-    opacity: 0;
-  }
-
-  .animate-slide-left {
-    animation: slideLeft 0.6s ease-out forwards;
-    opacity: 0;
-  }
-
-  .animate-slide-right {
-    animation: slideRight 0.6s ease-out forwards;
-    opacity: 0;
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  .animate-shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
   .text-balance {
     text-wrap: balance;
   }
@@ -158,6 +127,7 @@ body {
   }
 }
 
+/* Custom Component Classes */
 .hover-lift {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
@@ -243,6 +213,7 @@ body {
   outline-offset: 2px;
 }
 
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .animate-slide-left,
   .animate-slide-right {
@@ -250,6 +221,7 @@ body {
   }
 }
 
+/* Dark Mode Styles */
 @media (prefers-color-scheme: dark) {
   .skeleton {
     background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
@@ -263,6 +235,7 @@ body {
   }
 }
 
+/* Print Styles */
 @media print {
   .no-print {
     display: none !important;
