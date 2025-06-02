@@ -9,7 +9,7 @@ import IssueDetails from './IssueDetails';
 import SecureStatusChanger from '@/app/components/SecureStatusChanger';
 import { useSession } from 'next-auth/react';
 import { checkIssuePermissions, debugPermissions } from '@/lib/permissions';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 interface SerializedUser {
     id: string;
@@ -48,10 +48,17 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
     // 🔐 SECURITY: Check permissions
     const permissions = checkIssuePermissions(session, issueWithDates);
 
-    // 🔍 DEBUG: Log permissions in development
+    const issueForDebugging = useMemo(() => ({
+        ...issue,
+        createdAt: new Date(issue.createdAt),
+        updatedAt: new Date(issue.updatedAt),
+        status: issue.status as Status
+    }), [issue.id, issue.status, issue.assignedToUserId, issue.title, issue]);
+
     useEffect(() => {
-        debugPermissions(session, issueWithDates);
-    }, [session, issue.id]);
+        debugPermissions(session, issueForDebugging);
+    }, [session, issueForDebugging]);
+
 
     return (
         <div className="max-w-7xl mx-auto p-6">
@@ -72,8 +79,8 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                     <div className="flex justify-between items-center">
                                         <span>Edit:</span>
                                         <span className={`px-2 py-1 rounded-full font-medium ${permissions.canEdit
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
                                             }`}>
                                             {permissions.canEdit ? 'Yes' : 'No'}
                                         </span>
@@ -81,8 +88,8 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                     <div className="flex justify-between items-center">
                                         <span>Change Status:</span>
                                         <span className={`px-2 py-1 rounded-full font-medium ${permissions.canChangeStatus
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
                                             }`}>
                                             {permissions.canChangeStatus ? 'Yes' : 'No'}
                                         </span>
@@ -90,8 +97,8 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                     <div className="flex justify-between items-center">
                                         <span>Delete:</span>
                                         <span className={`px-2 py-1 rounded-full font-medium ${permissions.canDelete
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
                                             }`}>
                                             {permissions.canDelete ? 'Yes' : 'No'}
                                         </span>
@@ -165,8 +172,8 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Status:</span>
                                         <span className={`font-medium ${issue.status === 'OPEN' ? 'text-red-600' :
-                                                issue.status === 'IN_PROGRESS' ? 'text-yellow-600' :
-                                                    'text-green-600'
+                                            issue.status === 'IN_PROGRESS' ? 'text-yellow-600' :
+                                                'text-green-600'
                                             }`}>
                                             {issue.status.replace('_', ' ')}
                                         </span>
@@ -180,10 +187,10 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Your Role:</span>
                                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${permissions.isAssignedUser
-                                                ? 'bg-green-100 text-green-700'
-                                                : permissions.isUnassigned
-                                                    ? 'bg-gray-100 text-gray-700'
-                                                    : 'bg-blue-100 text-blue-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : permissions.isUnassigned
+                                                ? 'bg-gray-100 text-gray-700'
+                                                : 'bg-blue-100 text-blue-700'
                                             }`}>
                                             {permissions.isAssignedUser ? 'Assignee' :
                                                 permissions.isUnassigned ? 'Anyone' : 'Viewer'}

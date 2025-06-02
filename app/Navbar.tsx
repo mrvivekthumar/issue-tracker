@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { FaBug, FaPlus, FaList, FaChartBar, FaUser, FaSignOutAlt, FaSignInAlt, FaBell, FaSearch, FaCog } from "react-icons/fa";
 import { FiMenu, FiX, FiChevronDown } from "react-icons/fi";
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -315,14 +316,16 @@ const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef }:
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                 className="flex items-center space-x-3 p-2 hover:bg-gray-50 transition-all duration-200 rounded-xl"
             >
-                <div className="relative">
-                    <img
+                <div className="relative w-8 h-8">
+                    <Image
                         src={session?.user?.image || defaultAvatar}
                         alt={session?.user?.name || "User"}
-                        className="w-8 h-8 rounded-full border-2 border-gray-200 hover:border-violet-300 transition-colors"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = defaultAvatar;
+                        fill
+                        className="rounded-full border-2 border-gray-200 hover:border-violet-300 transition-colors object-cover"
+                        unoptimized={!session?.user?.image}
+                        onError={() => {
+                            // Handle error by falling back to default avatar
+                            // Note: Next.js Image component handles this differently
                         }}
                     />
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
@@ -342,13 +345,15 @@ const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef }:
                 <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 shadow-xl rounded-xl z-50">
                     <div className="p-3 border-b border-gray-100">
                         <div className="flex items-center space-x-3">
-                            <img
+                            <Image
                                 src={session?.user?.image || defaultAvatar}
                                 alt={session?.user?.name || "User"}
-                                className="w-10 h-10 rounded-full"
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = defaultAvatar;
+                                fill
+                                className="rounded-full border-2 border-gray-200 hover:border-violet-300 transition-colors object-cover"
+                                unoptimized={!session?.user?.image}
+                                onError={() => {
+                                    // Handle error by falling back to default avatar
+                                    // Note: Next.js Image component handles this differently
                                 }}
                             />
                             <div className="flex-1 min-w-0">

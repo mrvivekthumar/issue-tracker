@@ -395,7 +395,7 @@ export function logPermissionAction(
     console.log('🔐 Permission Action:', logEntry);
 }
 
-export default {
+const PermissionUtils = {
     checkIssuePermissions,
     canUserEditIssue,
     canUserChangeStatus,
@@ -406,3 +406,5 @@ export default {
     debugPermissions,
     logPermissionAction
 };
+
+export default PermissionUtils;

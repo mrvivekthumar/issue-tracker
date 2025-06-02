@@ -6,6 +6,7 @@ import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
 import { useState, useRef, useEffect } from 'react';
 import { FiChevronDown, FiUser, FiUserCheck } from 'react-icons/fi';
+import Image from "next/image";
 
 const AssigneeSelect = ({ issue }: { issue: Issue }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -74,10 +75,14 @@ const AssigneeSelect = ({ issue }: { issue: Issue }) => {
                     <div className="flex items-center gap-3">
                         {currentAssignee ? (
                             <>
-                                <img
-                                    src={currentAssignee.image || "/api/placeholder/32/32"}
-                                    alt={currentAssignee.name || "User"}
-                                    className="w-6 h-6 rounded-full border border-gray-200"
+                                <Image
+                                    src={currentAssignee?.image || "/api/placeholder/32/32"}
+                                    alt={currentAssignee?.name || "Assigned user"}
+                                    width={32}
+                                    height={32}
+                                    className="w-8 h-8 rounded-full border-2 border-gray-200"
+                                    title={`Assigned to ${currentAssignee?.name}`}
+                                    unoptimized={!currentAssignee?.image}
                                 />
                                 <span className="text-gray-900 font-medium">{displayText}</span>
                             </>
@@ -126,10 +131,13 @@ const AssigneeSelect = ({ issue }: { issue: Issue }) => {
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <img
-                                            src={user.image || "/api/placeholder/32/32"}
-                                            alt={user.name || "User"}
+                                        <Image
+                                            src={currentAssignee?.image || "/api/placeholder/32/32"}
+                                            alt={currentAssignee?.name || "User"}
+                                            width={24}
+                                            height={24}
                                             className="w-6 h-6 rounded-full border border-gray-200"
+                                            unoptimized={!currentAssignee?.image} // Don't optimize placeholder
                                         />
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium truncate">{user.name}</p>

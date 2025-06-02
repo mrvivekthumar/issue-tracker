@@ -183,7 +183,7 @@ const DeleteIssueButton = ({ issueId, issueTitle, issueStatus }: DeleteIssueButt
                                 {issueTitle && (
                                     <div className="bg-gray-50 p-3 rounded-lg mb-3">
                                         <p className="text-sm font-medium text-gray-900 truncate">
-                                            "{issueTitle}"
+                                            {issueTitle}
                                         </p>
                                         {issueStatus && (
                                             <p className="text-xs text-gray-500 mt-1">

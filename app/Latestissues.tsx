@@ -1,6 +1,7 @@
 import prisma from '@/prisma/client'
 import Link from 'next/link'
 import IssueStatusBadge from './components/IssueStatusBadge'
+import Image from 'next/image'
 
 const Latestissues = async () => {
     const issues = await prisma.issue.findMany({
@@ -81,11 +82,14 @@ const Latestissues = async () => {
                                 <div className="flex-shrink-0">
                                     {issue.assignedToUser ? (
                                         <div className="relative">
-                                            <img
+                                            <Image
                                                 src={issue.assignedToUser.image || "/api/placeholder/32/32"}
                                                 alt={issue.assignedToUser.name || "Assigned user"}
+                                                width={32}
+                                                height={32}
                                                 className="w-8 h-8 rounded-full border-2 border-gray-200"
                                                 title={`Assigned to ${issue.assignedToUser.name}`}
+                                                unoptimized={!issue.assignedToUser.image} // Don't optimize placeholder/fallback images
                                             />
                                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                                         </div>

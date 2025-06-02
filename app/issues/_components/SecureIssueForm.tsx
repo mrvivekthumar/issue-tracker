@@ -494,6 +494,7 @@ const SecureIssueForm = ({ issue }: IssueFormProps) => {
                             <div className="flex items-center justify-center gap-2">
                                 <FiX className="w-4 h-4" />
                                 {issue && !userPermissions.canEdit ? 'Close' : 'Cancel'}
+
                             </div>
                         </button>
                     </div>
@@ -501,7 +502,7 @@ const SecureIssueForm = ({ issue }: IssueFormProps) => {
                     {/* 🔐 SECURITY: Permission explanation */}
                     {issue && !userPermissions.canEdit && (
                         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 className="font-semibold text-blue-900 mb-2">Why can't I edit this issue?</h4>
+                            <h4 className="font-semibold text-blue-900 mb-2">Why can&apos;t I edit this issue?</h4>
                             <div className="text-sm text-blue-800 space-y-2">
                                 <p>This issue tracking system uses role-based security:</p>
                                 <ul className="list-disc list-inside space-y-1 ml-4">
