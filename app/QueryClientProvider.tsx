@@ -11,25 +11,26 @@ export default function QueryClientProvider({
 }) {
     const [mounted, setMounted] = useState(false);
 
-    // Create QueryClient inside component to avoid SSR issues
+    // Create QueryClient with optimized settings for better performance
     const [queryClient] = useState(
         () =>
             new QueryClient({
                 defaultOptions: {
                     queries: {
-                        staleTime: 60 * 1000, // 1 minute
-                        gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+                        staleTime: 5 * 60 * 1000, // 5 minutes (increased from 1 minute)
+                        gcTime: 30 * 60 * 1000, // 30 minutes (increased from 10 minutes)
                         retry: (failureCount, error: any) => {
                             // Don't retry on 4xx errors
                             if (error?.status >= 400 && error?.status < 500) {
                                 return false;
                             }
-                            return failureCount < 3;
+                            return failureCount < 2; // Reduced retries for faster failures
                         },
-                        // Prevent automatic refetching on window focus during hydration
+                        // Optimize for faster navigation
                         refetchOnWindowFocus: false,
                         refetchOnMount: true,
                         refetchOnReconnect: true,
+                        // suspense is not a valid option here and has been removed
                     },
                     mutations: {
                         retry: (failureCount, error: any) => {
@@ -37,8 +38,10 @@ export default function QueryClientProvider({
                             if (error?.status >= 400 && error?.status < 500) {
                                 return false;
                             }
-                            return failureCount < 2;
+                            return failureCount < 1; // Reduced mutation retries
                         },
+                        // Faster mutation timeouts
+                        networkMode: 'online',
                     },
                 },
             })
@@ -52,11 +55,12 @@ export default function QueryClientProvider({
     return (
         <TanStackQueryClientProvider client={queryClient}>
             {children}
-            {/* Only show devtools after mounting to prevent hydration issues */}
+            {/* Only show devtools in development and after mounting */}
             {mounted && process.env.NODE_ENV === 'development' && (
                 <ReactQueryDevtools
                     initialIsOpen={false}
-                // position="bottomRight"
+                    // Use a valid position value: 'bottom-left' is not allowed, use 'bottom' or 'right'
+                    position="bottom"
                 />
             )}
         </TanStackQueryClientProvider>

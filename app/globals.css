@@ -2,6 +2,189 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Add these CSS rules to your existing app/globals.css file */
+
+/* Better text wrapping for all content */
+.prose {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Ensure long text doesn't overflow containers */
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* For very long URLs or code */
+.break-all {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* Ensure containers don't exceed viewport width */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
+/* Better responsive containers */
+.container-responsive {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix for code blocks */
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Better responsive images */
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure tables are responsive */
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .prose table {
+    font-size: 0.875rem;
+  }
+}
+
+/* Better spacing for mobile */
+@media (max-width: 640px) {
+  .prose {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  
+  .prose h1 {
+    font-size: 1.5rem;
+  }
+  
+  .prose h2 {
+    font-size: 1.25rem;
+  }
+  
+  .prose h3 {
+    font-size: 1.125rem;
+  }
+}
+
+/* Improved scrollbar for better UX */
+.prose pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.prose pre::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.prose pre::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.prose pre::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Fix for mobile sidebar layout */
+@media (max-width: 1279px) {
+  .xl\:col-span-1 .sticky {
+    position: static;
+  }
+  
+  .xl\:col-span-1 > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Better mobile spacing */
+@media (max-width: 640px) {
+  .xl\:col-span-1 > div {
+    grid-template-columns: 1fr;
+  }
+  
+  .p-4 {
+    padding: 0.75rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+}
+
+/* Animation for better UX */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Better focus states for accessibility */
+.focus-ring:focus {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* Ensure text selections look good */
+::selection {
+  background-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+/* Better print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break-before {
+    page-break-before: always;
+  }
+  
+  .prose {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .prose h1, .prose h2, .prose h3 {
+    page-break-after: avoid;
+  }
+  
+  .prose pre {
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+  }
+}
+
+
 body {
   margin: 0;
   padding: 0;

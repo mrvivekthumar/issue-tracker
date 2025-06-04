@@ -1,20 +1,59 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
-    // ONLY USE WHEN THERE A IS FEATCHING ISSUE  IN GOOGLE AVATAR
+    // Configure allowed image domains for next/image component
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com',
+                port: '',
+                pathname: '/**',
+            },
+        ],
+    },
 
-    // async headers() {
-    //     return [
-    //         {
-    //             source: "/:path*",
-    //             headers: [
-    //                 { key: 'referrer-policy', value: 'no-referrer' }
-    //             ]
-    //         }
-    //     ]
-    // }
+    // Performance optimizations
+    compiler: {
+        // Remove console.logs in production
+        removeConsole: process.env.NODE_ENV === 'production',
+    },
 
+    // Reduce bundle size
+    experimental: {
+        optimizePackageImports: ['react-icons', 'lucide-react'],
+    },
 
+    // Enable compression
+    compress: true,
 
+    // Optimize images
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com',
+                port: '',
+                pathname: '/**',
+            },
+        ],
+        // Add image optimization
+        formats: ['image/webp', 'image/avif'],
+        minimumCacheTTL: 60,
+    },
+
+    // Headers for better caching
+    async headers() {
+        return [
+            {
+                source: '/api/:path*',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, s-maxage=60, stale-while-revalidate=300',
+                    },
+                ],
+            },
+        ];
+    },
 };
 
 export default nextConfig;

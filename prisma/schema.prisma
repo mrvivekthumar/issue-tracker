@@ -1,21 +1,35 @@
-// This is your Prisma schema file
-// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma - CORRECT SYNTAX
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // or whatever database you're using
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relation to issues
+  assignedIssues Issue[]
+
+  @@map("users")
 }
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String
+  userId            String  @map("user_id")
   type              String
   provider          String
-  providerAccountId String
+  providerAccountId String  @map("provider_account_id")
   refresh_token     String? @db.Text
   access_token      String? @db.Text
   expires_at        Int?
@@ -27,28 +41,17 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
 model Session {
   id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
-model User {
-  id             String    @id @default(cuid())
-  name           String?
-  email          String?   @unique
-  emailVerified  DateTime?
-  image          String?
-  accounts       Account[]
-  sessions       Session[]
-  assignedIssues Issue[]   @relation("AssignedUser")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("sessions")
 }
 
 model VerificationToken {
@@ -57,8 +60,16 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("verificationtokens")
 }
 
+enum Status {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+// ✅ CORRECT: Issue model with properly placed indexes
 model Issue {
   id               Int      @id @default(autoincrement())
   title            String   @db.VarChar(255)
@@ -66,12 +77,17 @@ model Issue {
   status           Status   @default(OPEN)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  assignedToUserId String?
-  assignedToUser   User?    @relation("AssignedUser", fields: [assignedToUserId], references: [id])
-}
+  assignedToUserId String?  @db.VarChar(255)
 
-enum Status {
-  OPEN
-  IN_PROGRESS
-  CLOSED
+  // Relation to user
+  assignedToUser User? @relation(fields: [assignedToUserId], references: [id])
+
+  // ✅ INDEXES GO HERE - after all fields and relations
+  @@index([status], name: "idx_issue_status")
+  @@index([createdAt], name: "idx_issue_created_at")
+  @@index([updatedAt], name: "idx_issue_updated_at")
+  @@index([assignedToUserId], name: "idx_issue_assigned_user")
+  @@index([status, createdAt], name: "idx_issue_status_created")
+  @@index([assignedToUserId, status], name: "idx_issue_user_status")
+  @@index([title], name: "idx_issue_title")
 }
