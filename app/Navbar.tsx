@@ -51,7 +51,7 @@ const Navbar = () => {
             window.removeEventListener('storage', handleAuthEvent);
             window.removeEventListener('auth-changed', handleAuthEvent);
         };
-    }, []);
+    }, [refreshSession]);
 
     // ✅ FIX 4: Enhanced issue stats with session dependency
     const { data: issueStats = defaultIssueStats, refetch: refetchIssueStats } = useIssueCount();

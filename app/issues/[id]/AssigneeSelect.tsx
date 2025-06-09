@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FiChevronDown, FiUser, FiUserCheck, FiLoader, FiRefreshCw, FiLock } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Image from "next/image";
 
 interface IssueWithUser extends Issue {
     createdByUser?: {
@@ -61,11 +62,14 @@ const UserAvatar = ({ user, size = 40, showStatus = false }: {
     return (
         <div className="relative" style={{ width: size, height: size }}>
             {user.image && !imageError ? (
-                <img
+                <Image
                     src={user.image}
                     alt={user.name || 'User'}
+                    width={size}
+                    height={size}
                     className="w-full h-full rounded-full object-cover border-2 border-white shadow-sm"
                     onError={() => setImageError(true)}
+                    unoptimized={true}
                 />
             ) : (
                 <div className={`w-full h-full rounded-full ${colorClass} flex items-center justify-center text-white font-bold border-2 border-white shadow-sm`}

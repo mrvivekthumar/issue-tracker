@@ -5,6 +5,7 @@ import { Status, Prisma } from '@prisma/client' // Import Prisma for types
 import IssueTable, { columnNames, IssueQuery } from './IssueTable'
 import IssueAction from './IsuueAction'
 import { Metadata } from 'next'
+import Link from 'next/link'
 
 interface Props {
     searchParams: Promise<IssueQuery & { search?: string }>
@@ -102,7 +103,7 @@ const IssuesPage = async ({ searchParams }: Props) => {
                             Issues
                             {searchQuery && (
                                 <span className="text-lg font-normal text-gray-600 ml-2">
-                                    - Search results for "{searchQuery}"
+                                    - Search results for {searchQuery}
                                 </span>
                             )}
                         </h1>
@@ -115,7 +116,7 @@ const IssuesPage = async ({ searchParams }: Props) => {
 
                         {searchQuery && (
                             <div className="mt-3">
-                                <a
+                                <Link
                                     href="/issues/list"
                                     className="inline-flex items-center gap-2 text-sm text-violet-600 hover:text-violet-700 font-medium"
                                 >
@@ -123,7 +124,7 @@ const IssuesPage = async ({ searchParams }: Props) => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                     Clear search
-                                </a>
+                                </Link>
                             </div>
                         )}
                     </div>
@@ -141,10 +142,10 @@ const IssuesPage = async ({ searchParams }: Props) => {
                                 No issues found
                             </h3>
                             <p className="text-gray-600 mb-4">
-                                No issues match your search for "{searchQuery}". Try different keywords or{' '}
-                                <a href="/issues/list" className="text-violet-600 hover:text-violet-700 font-medium">
+                                No issues match your search for &ldquo;{searchQuery}&rdquo;. Try different keywords or{''}
+                                <Link href="/issues/list" className="text-violet-600 hover:text-violet-700 font-medium">
                                     view all issues
-                                </a>
+                                </Link>
                                 .
                             </p>
                         </div>

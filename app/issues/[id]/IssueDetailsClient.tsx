@@ -15,6 +15,7 @@ import {
     FiArrowLeft, FiShare2, FiBookmark, FiEye
 } from 'react-icons/fi';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface SerializedUser {
     id: string;
@@ -77,10 +78,13 @@ const UserAvatar = ({ user, size = 32, className = "" }: {
     return (
         <div className={`relative ${className}`} style={{ width: size, height: size }}>
             {user.image ? (
-                <img
+                <Image
                     src={user.image}
                     alt={user.name || 'User'}
+                    width={size}
+                    height={size}
                     className="w-full h-full rounded-full object-cover border-2 border-white shadow-sm"
+                    unoptimized={true}
                 />
             ) : (
                 <div className={`w-full h-full rounded-full ${colorClass} flex items-center justify-center text-white font-bold border-2 border-white shadow-sm`}
