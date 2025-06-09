@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { FaBug, FaPlus, FaList, FaChartBar, FaUser, FaSignOutAlt, FaSignInAlt, FaBell, FaSearch, FaCog } from "react-icons/fa";
 import { FiMenu, FiX, FiChevronDown } from "react-icons/fi";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useIssueCount, defaultIssueStats } from '@/hooks/useIssueCount';
 
@@ -25,10 +25,10 @@ const Navbar = () => {
     const { data: session, status, update } = useSession();
 
     // ✅ FIX 2: Force session refresh when needed
-    const refreshSession = async () => {
+    const refreshSession = useCallback(async () => {
         console.log('🔄 Manually refreshing session...');
         await update();
-    };
+    }, [update]);
 
     // ✅ FIX 3: Listen for authentication events
     useEffect(() => {

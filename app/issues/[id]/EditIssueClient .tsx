@@ -10,10 +10,11 @@ interface SerializedIssue {
     id: number;
     title: string;
     description: string;
-    status: Status; // Keep as Status enum type
+    status: Status;
     createdAt: string; // Serialized as string
     updatedAt: string; // Serialized as string
     assignedToUserId: string | null;
+    createdByUserId: string | null; // Add this line
 }
 
 const IssueForm = dynamic(
@@ -35,7 +36,8 @@ const EditIssueClient = ({ issue }: Props) => {
         ...issue,
         createdAt: new Date(issue.createdAt),
         updatedAt: new Date(issue.updatedAt),
-        status: issue.status as Status // Ensure it's typed as Status
+        status: issue.status as Status, // Ensure it's typed as Status
+        createdByUserId: issue.createdByUserId || null // Add missing property
     };
 
     return (
