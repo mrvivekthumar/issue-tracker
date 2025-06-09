@@ -1,4 +1,4 @@
-// app/api/issues/[id]/route.ts - SECURE VERSION with Role-Based Access Control
+// app/api/issues/[id]/route.ts - FIXED: Preserve assignment on status change
 import authOptions from "@/app/auth/authOptions";
 import { patchIssueSchema } from "@/app/validationSchemas";
 import prisma from "@/prisma/client";
@@ -31,56 +31,54 @@ function createSuccessResponse(data: any, message?: string, status: number = 200
     }, { status });
 }
 
-// 🔐 SECURITY: Permission checking utility
+// Creator-based permission checking
 async function checkUserPermissions(
     session: any,
     issue: any,
-    operation: 'read' | 'update' | 'delete' | 'status_change'
+    operation: 'read' | 'update' | 'delete' | 'status_change' | 'assign'
 ) {
-    const currentUserId = session.user?.email; // NextAuth typically uses email as identifier
+    const currentUserEmail = session.user?.email;
+    const creatorEmail = issue.createdByUser?.email;
     const assignedUserEmail = issue.assignedToUser?.email;
 
-    console.log(`🔐 Permission check:`, {
+    const isCreator = currentUserEmail === creatorEmail;
+    const isAssignee = currentUserEmail === assignedUserEmail;
+    const isUnassigned = !assignedUserEmail;
+
+    console.log(`🔐 Permission check (Creator-Based):`, {
         operation,
-        currentUser: currentUserId,
-        assignedUser: assignedUserEmail,
+        currentUser: currentUserEmail,
+        creator: creatorEmail,
+        assignee: assignedUserEmail,
+        isCreator,
+        isAssignee,
+        isUnassigned,
         issueId: issue.id,
         issueStatus: issue.status
     });
 
     switch (operation) {
         case 'read':
-            // Anyone authenticated can read
             return { allowed: true };
 
         case 'update':
-            // Only assigned user can update basic fields (title, description)
-            if (!assignedUserEmail) {
-                return {
-                    allowed: true, // Unassigned issues can be updated by anyone
-                    reason: 'Issue is unassigned'
-                };
+            if (isCreator) {
+                return { allowed: true, reason: 'User is the issue creator' };
             }
-
-            if (currentUserId === assignedUserEmail) {
-                return { allowed: true, reason: 'User is assigned to this issue' };
-            }
-
             return {
                 allowed: false,
-                reason: `Only the assigned user (${assignedUserEmail}) can update this issue`
+                reason: `Only the issue creator (${creatorEmail}) can edit this issue`
             };
 
         case 'status_change':
-            // 🔐 CRITICAL: Only assigned user can change status
-            if (!assignedUserEmail) {
+            if (isUnassigned) {
                 return {
                     allowed: false,
                     reason: 'Issue must be assigned to someone before status can be changed'
                 };
             }
 
-            if (currentUserId === assignedUserEmail) {
+            if (isAssignee) {
                 return { allowed: true, reason: 'User is assigned to this issue' };
             }
 
@@ -89,8 +87,16 @@ async function checkUserPermissions(
                 reason: `Only the assigned user (${assignedUserEmail}) can change the status of this issue`
             };
 
+        case 'assign':
+            if (isCreator) {
+                return { allowed: true, reason: 'User is the issue creator' };
+            }
+            return {
+                allowed: false,
+                reason: `Only the issue creator (${creatorEmail}) can assign this issue`
+            };
+
         case 'delete':
-            // 🔐 CRITICAL: Only assigned user can delete, and only if status allows
             if (issue.status === 'IN_PROGRESS') {
                 return {
                     allowed: false,
@@ -98,20 +104,13 @@ async function checkUserPermissions(
                 };
             }
 
-            if (!assignedUserEmail) {
-                return {
-                    allowed: true, // Unassigned issues can be deleted by anyone
-                    reason: 'Issue is unassigned'
-                };
-            }
-
-            if (currentUserId === assignedUserEmail) {
-                return { allowed: true, reason: 'User is assigned to this issue' };
+            if (isCreator) {
+                return { allowed: true, reason: 'User is the issue creator' };
             }
 
             return {
                 allowed: false,
-                reason: `Only the assigned user (${assignedUserEmail}) can delete this issue`
+                reason: `Only the issue creator (${creatorEmail}) can delete this issue`
             };
 
         default:
@@ -126,7 +125,7 @@ export async function PATCH(
     try {
         const { id } = await context.params;
 
-        // 🔐 STEP 1: Authentication check
+        // Authentication check
         const session = await getServerSession(authOptions);
         if (!session) {
             return createErrorResponse("Authentication required", 401);
@@ -158,10 +157,18 @@ export async function PATCH(
 
         const { title, description, assignedToUserId, status } = validation.data;
 
-        // 🔐 STEP 2: Get issue with assigned user info
+        // Get issue with creator and assignee info
         const existingIssue = await prisma.issue.findUnique({
             where: { id: issueId },
             include: {
+                createdByUser: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true
+                    }
+                },
                 assignedToUser: {
                     select: {
                         id: true,
@@ -177,17 +184,20 @@ export async function PATCH(
             return createErrorResponse("Issue not found", 404);
         }
 
-        // 🔐 STEP 3: Check if user is trying to change status
+        // 🔧 FIX: Separate different types of operations
         const isStatusChange = status !== undefined && status !== existingIssue.status;
+        const isAssignmentChange = assignedToUserId !== undefined;
+        const isContentChange = title !== undefined || description !== undefined;
 
+        // Check permissions for each operation type
         if (isStatusChange) {
             console.log(`🔄 Status change attempted:`, {
                 from: existingIssue.status,
                 to: status,
-                user: session.user?.email
+                user: session.user?.email,
+                assignedUser: existingIssue.assignedToUser?.email
             });
 
-            // Check permissions for status change
             const statusPermission = await checkUserPermissions(session, existingIssue, 'status_change');
             if (!statusPermission.allowed) {
                 return createErrorResponse(
@@ -197,6 +207,7 @@ export async function PATCH(
                         reason: statusPermission.reason,
                         currentStatus: existingIssue.status,
                         requestedStatus: status,
+                        creator: existingIssue.createdByUser?.email || 'Unknown',
                         assignedTo: existingIssue.assignedToUser?.email || 'Unassigned',
                         currentUser: session.user?.email
                     }
@@ -204,8 +215,22 @@ export async function PATCH(
             }
         }
 
-        // 🔐 STEP 4: Check general update permissions (for title, description)
-        if (title !== undefined || description !== undefined) {
+        if (isAssignmentChange) {
+            const assignPermission = await checkUserPermissions(session, existingIssue, 'assign');
+            if (!assignPermission.allowed) {
+                return createErrorResponse(
+                    "Insufficient permissions to assign this issue",
+                    403,
+                    {
+                        reason: assignPermission.reason,
+                        creator: existingIssue.createdByUser?.email || 'Unknown',
+                        currentUser: session.user?.email
+                    }
+                );
+            }
+        }
+
+        if (isContentChange) {
             const updatePermission = await checkUserPermissions(session, existingIssue, 'update');
             if (!updatePermission.allowed) {
                 return createErrorResponse(
@@ -213,14 +238,14 @@ export async function PATCH(
                     403,
                     {
                         reason: updatePermission.reason,
-                        assignedTo: existingIssue.assignedToUser?.email || 'Unassigned',
+                        creator: existingIssue.createdByUser?.email || 'Unknown',
                         currentUser: session.user?.email
                     }
                 );
             }
         }
 
-        // 🔐 STEP 5: Validate assigned user if provided
+        // Validate assigned user if provided
         if (assignedToUserId) {
             const user = await prisma.user.findUnique({
                 where: { id: assignedToUserId }
@@ -231,29 +256,58 @@ export async function PATCH(
             }
         }
 
-        // 🔐 STEP 6: Log the operation for audit trail
+        // 🔧 FIX: Build update data properly - only update what was actually sent
+        const updateData: any = {
+            updatedAt: new Date()
+        };
+
+        // Only update fields that were actually provided
+        if (title !== undefined) {
+            updateData.title = title;
+        }
+
+        if (description !== undefined) {
+            updateData.description = description;
+        }
+
+        if (status !== undefined) {
+            updateData.status = status;
+        }
+
+        // 🔧 CRITICAL FIX: Only update assignedToUserId if it was explicitly provided
+        if (assignedToUserId !== undefined) {
+            updateData.assignedToUserId = assignedToUserId || null;
+        }
+        // 🚨 IMPORTANT: If assignedToUserId is NOT in the request, we DON'T touch it!
+
+        // Log the operation for audit trail
         console.log(`📝 Issue update authorized:`, {
             issueId,
             user: session.user?.email,
+            creator: existingIssue.createdByUser?.email,
+            currentAssignee: existingIssue.assignedToUser?.email,
+            updateData,
             changes: {
                 ...(title !== undefined && { title: `"${existingIssue.title}" → "${title}"` }),
                 ...(description !== undefined && { description: 'Updated' }),
                 ...(status !== undefined && { status: `${existingIssue.status} → ${status}` }),
-                ...(assignedToUserId !== undefined && { assignedTo: assignedToUserId })
+                ...(assignedToUserId !== undefined && { assignedTo: assignedToUserId || 'Unassigned' })
             }
         });
 
-        // 🔐 STEP 7: Perform the update
+        // Perform the update
         const updatedIssue = await prisma.issue.update({
             where: { id: issueId },
-            data: {
-                ...(title !== undefined && { title }),
-                ...(description !== undefined && { description }),
-                ...(status !== undefined && { status }),
-                assignedToUserId: assignedToUserId || null,
-                updatedAt: new Date()
-            },
+            data: updateData,
             include: {
+                createdByUser: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true
+                    }
+                },
                 assignedToUser: {
                     select: {
                         id: true,
@@ -265,6 +319,15 @@ export async function PATCH(
             }
         });
 
+        // 🔧 VERIFICATION: Log the result to ensure assignment is preserved
+        console.log(`✅ Update completed:`, {
+            issueId,
+            previousAssignee: existingIssue.assignedToUser?.email,
+            newAssignee: updatedIssue.assignedToUser?.email,
+            statusChange: isStatusChange ? `${existingIssue.status} → ${updatedIssue.status}` : 'No change',
+            assignmentChange: isAssignmentChange ? 'Yes' : 'No'
+        });
+
         return createSuccessResponse(
             updatedIssue,
             `Issue updated successfully${isStatusChange ? ` (status changed to ${status})` : ''}`
@@ -273,7 +336,6 @@ export async function PATCH(
     } catch (error) {
         console.error('PATCH /api/issues/[id] error:', error);
 
-        // Handle specific Prisma errors
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 return createErrorResponse("Unique constraint violation", 409, error.meta);
@@ -295,22 +357,26 @@ export async function DELETE(
         const { id } = await context.params;
         console.log(`🗑️ DELETE request for issue ID: ${id}`);
 
-        // 🔐 STEP 1: Authentication check
         const session = await getServerSession(authOptions);
         if (!session) {
             return createErrorResponse("Authentication required", 401);
         }
 
-        // Validate issue ID
         const issueId = parseInt(id);
         if (isNaN(issueId) || issueId <= 0) {
             return createErrorResponse("Invalid issue ID", 400, { providedId: id });
         }
 
-        // 🔐 STEP 2: Get issue with assigned user info
         const existingIssue = await prisma.issue.findUnique({
             where: { id: issueId },
             include: {
+                createdByUser: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                },
                 assignedToUser: {
                     select: {
                         id: true,
@@ -325,7 +391,6 @@ export async function DELETE(
             return createErrorResponse("Issue not found", 404, { issueId });
         }
 
-        // 🔐 STEP 3: Check deletion permissions
         const deletePermission = await checkUserPermissions(session, existingIssue, 'delete');
         if (!deletePermission.allowed) {
             return createErrorResponse(
@@ -334,22 +399,20 @@ export async function DELETE(
                 {
                     reason: deletePermission.reason,
                     issueStatus: existingIssue.status,
-                    assignedTo: existingIssue.assignedToUser?.email || 'Unassigned',
+                    creator: existingIssue.createdByUser?.email || 'Unknown',
                     currentUser: session.user?.email,
                     issueTitle: existingIssue.title
                 }
             );
         }
 
-        // 🔐 STEP 4: Log deletion for audit trail
         console.log(`🗑️ Issue deletion authorized:`, {
             issueId,
             title: existingIssue.title,
             user: session.user?.email,
-            assignedUser: existingIssue.assignedToUser?.email
+            creator: existingIssue.createdByUser?.email
         });
 
-        // Perform the deletion
         await prisma.issue.delete({
             where: { id: issueId }
         });
@@ -383,7 +446,6 @@ export async function DELETE(
     }
 }
 
-// GET method with read permissions
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -391,16 +453,22 @@ export async function GET(
     try {
         const { id } = await context.params;
 
-        // Validate issue ID
         const issueId = parseInt(id);
         if (isNaN(issueId) || issueId <= 0) {
             return createErrorResponse("Invalid issue ID", 400);
         }
 
-        // Fetch issue with related data
         const issue = await prisma.issue.findUnique({
             where: { id: issueId },
             include: {
+                createdByUser: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true
+                    }
+                },
                 assignedToUser: {
                     select: {
                         id: true,

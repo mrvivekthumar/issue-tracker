@@ -1,8 +1,9 @@
+// app/issues/[id]/DeleteIssueButton.tsx - Updated to match new design
 'use client';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
-import { FiTrash2, FiLoader, FiX, FiAlertTriangle, FiInfo } from 'react-icons/fi';
+import { FiTrash2, FiLoader, FiX, FiAlertTriangle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 interface DeleteIssueButtonProps {
@@ -22,114 +23,64 @@ const DeleteIssueButton = ({ issueId, issueTitle, issueStatus }: DeleteIssueButt
             setDeleting(true);
             setError('');
 
-            console.log(`🗑️ Attempting to delete issue ${issueId}`); // Debug log
-
             const response = await axios.delete(`/api/issues/${issueId}`);
 
-            console.log(`✅ Delete response:`, response.data); // Debug log
-
-            // Show success message
             toast.success(response.data.message || 'Issue deleted successfully!', {
                 icon: '🗑️',
-                style: {
-                    borderRadius: '10px',
-                    background: '#10B981',
-                    color: '#fff',
-                },
                 duration: 3000
             });
 
-            // Redirect after successful deletion
             router.push('/issues/list');
             router.refresh();
 
         } catch (error) {
-            console.error(`❌ Delete error:`, error); // Debug log
             setDeleting(false);
 
             if (axios.isAxiosError(error)) {
                 const errorResponse = error.response?.data;
-                console.log(`📋 Error details:`, errorResponse); // Debug log
 
-                if (error.response?.status === 400 && errorResponse?.details?.currentStatus) {
-                    // Business rule violation (e.g., trying to delete IN_PROGRESS issue)
-                    const errorMessage = errorResponse.error || 'Cannot delete this issue';
-                    const currentStatus = errorResponse.details.currentStatus;
-                    const allowedStatuses = errorResponse.details.allowedStatuses || [];
-
-                    setError(`${errorMessage}\n\nCurrent status: ${currentStatus}\nAllowed statuses for deletion: ${allowedStatuses.join(', ')}`);
-
+                if (error.response?.status === 403) {
+                    const errorMessage = errorResponse?.details?.reason || errorResponse?.error || 'Permission denied';
+                    setError(`Access denied: ${errorMessage}`);
+                    toast.error(`Permission denied: ${errorMessage}`, {
+                        icon: '🔒',
+                        duration: 5000
+                    });
+                } else if (error.response?.status === 400) {
+                    const errorMessage = errorResponse?.error || 'Cannot delete this issue';
+                    setError(errorMessage);
                     toast.error(errorMessage, {
                         icon: '⚠️',
-                        style: {
-                            borderRadius: '10px',
-                            background: '#EF4444',
-                            color: '#fff',
-                        },
                         duration: 5000
                     });
                 } else if (error.response?.status === 404) {
                     setError('Issue not found. It may have already been deleted.');
-                    toast.error('Issue not found', {
-                        icon: '🔍',
-                        style: {
-                            borderRadius: '10px',
-                            background: '#EF4444',
-                            color: '#fff',
-                        }
-                    });
-                } else if (error.response?.status === 401) {
-                    setError('You are not authorized to delete this issue.');
-                    toast.error('Unauthorized', {
-                        icon: '🔒',
-                        style: {
-                            borderRadius: '10px',
-                            background: '#EF4444',
-                            color: '#fff',
-                        }
-                    });
+                    toast.error('Issue not found', { icon: '🔍' });
                 } else {
                     const genericMessage = errorResponse?.error || 'Failed to delete issue';
                     setError(genericMessage);
-                    toast.error(genericMessage, {
-                        icon: '❌',
-                        style: {
-                            borderRadius: '10px',
-                            background: '#EF4444',
-                            color: '#fff',
-                        }
-                    });
+                    toast.error(genericMessage, { icon: '❌' });
                 }
             } else {
                 const unexpectedError = 'An unexpected error occurred';
                 setError(unexpectedError);
-                toast.error(unexpectedError, {
-                    icon: '💥',
-                    style: {
-                        borderRadius: '10px',
-                        background: '#EF4444',
-                        color: '#fff',
-                    }
-                });
+                toast.error(unexpectedError, { icon: '💥' });
             }
         }
     }
 
-    // Check if deletion might be blocked
-    const isDeletionLikelyBlocked = issueStatus === 'IN_PROGRESS';
-    const warningMessage = isDeletionLikelyBlocked ?
-        'This issue is currently IN_PROGRESS and may not be deletable. Consider changing its status first.' : '';
+    const isDeletionRisky = issueStatus === 'IN_PROGRESS';
 
     return (
         <>
-            {/* Delete Button */}
+            {/* 🎨 UPDATED: Better delete button design */}
             <button
                 onClick={() => setShowConfirm(true)}
                 disabled={isDeleting}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-md hover:shadow-lg disabled:shadow-sm ${isDeletionLikelyBlocked
+                className={`inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all duration-200 shadow-sm ${isDeletionRisky
                     ? 'bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300'
                     : 'bg-red-600 hover:bg-red-700 disabled:bg-red-400'
-                    }`}
+                    } disabled:cursor-not-allowed`}
             >
                 {isDeleting ? (
                     <>
@@ -139,148 +90,161 @@ const DeleteIssueButton = ({ issueId, issueTitle, issueStatus }: DeleteIssueButt
                 ) : (
                     <>
                         <FiTrash2 className="w-4 h-4" />
-                        Delete Issue
+                        Delete
                     </>
                 )}
             </button>
 
-            {/* Warning for likely blocked deletions */}
-            {isDeletionLikelyBlocked && (
-                <div className="text-xs text-orange-600 mt-1 flex items-center gap-1">
-                    <FiInfo className="w-3 h-3" />
-                    Status: {issueStatus}
-                </div>
-            )}
-
-            {/* Confirmation Modal */}
+            {/* 🎨 UPDATED: Better confirmation modal */}
             {showConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={() => setShowConfirm(false)}
                     />
 
                     {/* Modal */}
-                    <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-slide-up">
-                        <div className="p-6">
-                            {/* Header */}
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className={`p-2 rounded-full ${isDeletionLikelyBlocked ? 'bg-orange-100' : 'bg-red-100'}`}>
-                                    <FiAlertTriangle className={`w-5 h-5 ${isDeletionLikelyBlocked ? 'text-orange-600' : 'text-red-600'}`} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slide-up">
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-3 rounded-full ${isDeletionRisky ? 'bg-orange-100' : 'bg-red-100'
+                                    }`}>
+                                    <FiAlertTriangle className={`w-6 h-6 ${isDeletionRisky ? 'text-orange-600' : 'text-red-600'
+                                        }`} />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Confirm Deletion
-                                </h3>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                        Delete Issue
+                                    </h3>
+                                    <p className="text-sm text-gray-600">
+                                        This action cannot be undone
+                                    </p>
+                                </div>
                             </div>
+                        </div>
 
-                            {/* Content */}
-                            <div className="mb-6">
-                                <p className="text-gray-600 mb-3">
-                                    Are you sure you want to delete this issue?
-                                </p>
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-700">
+                                Are you sure you want to delete this issue?
+                            </p>
 
-                                {issueTitle && (
-                                    <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                            {issueTitle}
-                                        </p>
-                                        {issueStatus && (
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                Status: {issueStatus}
-                                            </p>
-                                        )}
+                            {issueTitle && (
+                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="text-sm font-mono text-gray-600">#{issueId}</span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="font-medium text-gray-900 truncate">
+                                                {issueTitle}
+                                            </h4>
+                                            {issueStatus && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-xs text-gray-500">Status:</span>
+                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${issueStatus === 'OPEN' ? 'bg-red-100 text-red-700' :
+                                                        issueStatus === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-green-100 text-green-700'
+                                                        }`}>
+                                                        {issueStatus.replace('_', ' ')}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
+                                </div>
+                            )}
 
-                                {warningMessage && (
-                                    <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-3">
-                                        <div className="flex items-start gap-2">
-                                            <FiInfo className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                                            <p className="text-sm text-orange-700">
-                                                {warningMessage}
+                            {isDeletionRisky && (
+                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                                    <div className="flex items-start gap-2">
+                                        <FiAlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                        <div className="text-sm text-orange-800">
+                                            <p className="font-medium">Warning: Issue in Progress</p>
+                                            <p className="mt-1">
+                                                This issue is currently being worked on. Consider changing its status before deleting.
                                             </p>
                                         </div>
                                     </div>
-                                )}
+                                </div>
+                            )}
+                        </div>
 
-                                <p className="text-sm text-gray-500">
-                                    This action cannot be undone.
-                                </p>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowConfirm(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowConfirm(false);
-                                        deleteIssue();
-                                    }}
-                                    className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors duration-200 font-medium ${isDeletionLikelyBlocked
-                                        ? 'bg-orange-600 hover:bg-orange-700'
-                                        : 'bg-red-600 hover:bg-red-700'
-                                        }`}
-                                >
-                                    Delete Anyway
-                                </button>
-                            </div>
+                        {/* Actions */}
+                        <div className="p-6 border-t border-gray-200 flex gap-3">
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowConfirm(false);
+                                    deleteIssue();
+                                }}
+                                className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium ${isDeletionRisky
+                                    ? 'bg-orange-600 hover:bg-orange-700'
+                                    : 'bg-red-600 hover:bg-red-700'
+                                    }`}
+                            >
+                                Delete Issue
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Enhanced Error Modal */}
+            {/* 🎨 UPDATED: Better error modal */}
             {error && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* Backdrop */}
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={() => setError('')}
                     />
 
-                    {/* Modal */}
-                    <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-slide-up">
-                        <div className="p-6">
-                            {/* Header */}
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-red-100 rounded-full">
-                                    <FiX className="w-5 h-5 text-red-600" />
+                    <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full">
+                        <div className="p-6 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-red-100 rounded-full">
+                                    <FiX className="w-6 h-6 text-red-600" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Deletion Failed
-                                </h3>
-                            </div>
-
-                            {/* Content */}
-                            <div className="mb-6">
-                                <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                                    <pre className="text-sm text-red-700 whitespace-pre-wrap font-medium">
-                                        {error}
-                                    </pre>
-                                </div>
-
-                                <div className="mt-4 text-sm text-gray-600">
-                                    <p className="font-medium mb-2">Possible solutions:</p>
-                                    <ul className="list-disc list-inside space-y-1">
-                                        <li>Change the issue status to OPEN before deleting</li>
-                                        <li>Check if you have permission to delete this issue</li>
-                                        <li>Contact an administrator if the problem persists</li>
-                                    </ul>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                        Deletion Failed
+                                    </h3>
+                                    <p className="text-sm text-gray-600">
+                                        Unable to delete the issue
+                                    </p>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Action */}
+                        <div className="p-6 space-y-4">
+                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-sm text-red-800 font-medium">
+                                    {error}
+                                </p>
+                            </div>
+
+                            <div className="text-sm text-gray-600 space-y-2">
+                                <p className="font-medium">Possible solutions:</p>
+                                <ul className="list-disc list-inside space-y-1 ml-2">
+                                    <li>Check if you have permission to delete this issue</li>
+                                    <li>Change the issue status before deleting</li>
+                                    <li>Contact an administrator if the problem persists</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200">
                             <button
                                 onClick={() => setError('')}
-                                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 font-medium"
+                                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
                             >
-                                OK
+                                Close
                             </button>
                         </div>
                     </div>

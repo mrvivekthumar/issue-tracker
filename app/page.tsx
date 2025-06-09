@@ -18,7 +18,6 @@ import IssueSummary from "./IssueSummary";
 import IssueChart from "./IssueChart";
 import Latestissues from "./Latestissues";
 
-// Enhanced Types for Production
 interface DashboardStats {
   total: number;
   open: number;

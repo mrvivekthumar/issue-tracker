@@ -1,4 +1,4 @@
-// app/issues/[id]/IssueDetailsClient.tsx - COMPLETE VERSION with proper layout
+// app/issues/[id]/IssueDetailsClient.tsx - Completely Redesigned
 'use client';
 
 import { Status } from '@prisma/client';
@@ -8,8 +8,13 @@ import EditIssueButton from './EditIssueButton';
 import IssueDetails from './IssueDetails';
 import SecureStatusChanger from '@/app/components/SecureStatusChanger';
 import { useSession } from 'next-auth/react';
-import { checkIssuePermissions, debugPermissions } from '@/lib/permissions';
+import { checkIssuePermissions } from '@/lib/permissions';
 import { useEffect, useMemo } from 'react';
+import {
+    FiUser, FiCalendar, FiClock, FiTag, FiEdit3, FiTrash2,
+    FiArrowLeft, FiShare2, FiBookmark, FiEye
+} from 'react-icons/fi';
+import Link from 'next/link';
 
 interface SerializedUser {
     id: string;
@@ -25,6 +30,8 @@ interface SerializedIssue {
     status: Status;
     createdAt: string;
     updatedAt: string;
+    createdByUserId: string | null;
+    createdByUser: SerializedUser | null;
     assignedToUserId: string | null;
     assignedToUser: SerializedUser | null;
 }
@@ -34,10 +41,78 @@ interface Props {
     hasSession: boolean;
 }
 
+// 🎨 User Avatar Component (same as before)
+const UserAvatar = ({ user, size = 32, className = "" }: {
+    user: SerializedUser | null,
+    size?: number,
+    className?: string
+}) => {
+    if (!user) {
+        return (
+            <div className={`rounded-full bg-gray-200 flex items-center justify-center ${className}`}
+                style={{ width: size, height: size }}>
+                <FiUser className="text-gray-400" style={{ width: size * 0.5, height: size * 0.5 }} />
+            </div>
+        );
+    }
+
+    const getInitials = (name: string | null, email: string | null) => {
+        if (name) return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        if (email) return email[0].toUpperCase();
+        return 'U';
+    };
+
+    const getRandomColor = (str: string) => {
+        const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-yellow-500', 'bg-red-500', 'bg-teal-500'];
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return colors[Math.abs(hash) % colors.length];
+    };
+
+    const initials = getInitials(user.name, user.email);
+    const colorClass = getRandomColor(user.email || user.name || 'user');
+
+    return (
+        <div className={`relative ${className}`} style={{ width: size, height: size }}>
+            {user.image ? (
+                <img
+                    src={user.image}
+                    alt={user.name || 'User'}
+                    className="w-full h-full rounded-full object-cover border-2 border-white shadow-sm"
+                />
+            ) : (
+                <div className={`w-full h-full rounded-full ${colorClass} flex items-center justify-center text-white font-bold border-2 border-white shadow-sm`}
+                    style={{ fontSize: size * 0.35 }}>
+                    {initials}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// 🎨 Status Badge Component
+const StatusBadge = ({ status }: { status: Status }) => {
+    const statusConfig = {
+        OPEN: { label: 'Open', className: 'bg-red-100 text-red-800 border-red-200', icon: '🔴' },
+        IN_PROGRESS: { label: 'In Progress', className: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '🟡' },
+        CLOSED: { label: 'Closed', className: 'bg-green-100 text-green-800 border-green-200', icon: '🟢' }
+    };
+
+    const config = statusConfig[status];
+
+    return (
+        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${config.className}`}>
+            <span>{config.icon}</span>
+            {config.label}
+        </span>
+    );
+};
+
 const IssueDetailsClient = ({ issue, hasSession }: Props) => {
     const { data: session } = useSession();
 
-    // Convert serialized dates back to Date objects
     const issueWithDates = {
         ...issue,
         createdAt: new Date(issue.createdAt),
@@ -45,263 +120,310 @@ const IssueDetailsClient = ({ issue, hasSession }: Props) => {
         status: issue.status as Status
     };
 
-    // Security: Check permissions
     const permissions = checkIssuePermissions(session, issueWithDates);
 
-    const issueForDebugging = useMemo(() => ({
-        ...issue,
-        createdAt: new Date(issue.createdAt),
-        updatedAt: new Date(issue.updatedAt),
-        status: issue.status as Status
-    }), [issue.id, issue.status, issue.assignedToUserId, issue.title, issue]);
+    const formatDate = (date: Date) => {
+        return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    };
 
-    useEffect(() => {
-        debugPermissions(session, issueForDebugging);
-    }, [session, issueForDebugging]);
+    const getTimeAgo = (date: Date) => {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        return formatDate(date);
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto p-4 sm:p-6">
-                {/* ✅ FIXED: Better responsive grid layout */}
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            {/* 🎨 Header Navigation */}
+            <div className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href="/issues/list"
+                                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                <FiArrowLeft className="w-5 h-5" />
+                                <span className="font-medium">Back to Issues</span>
+                            </Link>
+                            <div className="h-6 w-px bg-gray-300"></div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-500">Issue</span>
+                                <span className="font-mono text-lg font-bold text-gray-900">#{issue.id}</span>
+                            </div>
+                        </div>
 
-                    {/* Main Content - Takes more space on larger screens */}
-                    <div className="xl:col-span-3 space-y-6">
-                        <IssueDetails issue={issueWithDates} />
+                        <div className="flex items-center gap-3">
+                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <FiBookmark className="w-5 h-5" />
+                            </button>
+                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <FiShare2 className="w-5 h-5" />
+                            </button>
+                            <StatusBadge status={issue.status} />
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Sidebar - Better organization and mobile-friendly */}
-                    {hasSession && (
-                        <div className="xl:col-span-1">
-                            {/* ✅ FIXED: Remove sticky positioning that was causing layout issues */}
-                            <div className="space-y-4">
+            {/* 🎨 Main Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-                                {/* ✅ FIXED: Assignee Section - Most Important, Moved to Top */}
-                                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-violet-50 to-purple-50">
-                                        <h3 className="text-sm font-semibold text-violet-900 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                            Assignee
-                                        </h3>
-                                        <p className="text-xs text-violet-700 mt-1">
-                                            Who is working on this issue?
-                                        </p>
-                                    </div>
-                                    <div className="p-4">
-                                        <AssigneeSelect issue={issueWithDates} />
-                                    </div>
-                                </div>
+                    {/* Main Content Column */}
+                    <div className="lg:col-span-3 space-y-6">
 
-                                {/* Status Control Section */}
-                                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-                                        <h3 className="text-sm font-semibold text-blue-900 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Status Control
-                                        </h3>
-                                        <p className="text-xs text-blue-700 mt-1">
-                                            Update the issue progress
-                                        </p>
-                                    </div>
-                                    <div className="p-4">
-                                        <SecureStatusChanger
-                                            issueId={issue.id}
-                                            currentStatus={issue.status}
-                                            assignedUserEmail={issue.assignedToUser?.email}
-                                            onStatusChange={() => {
-                                                // Broadcast status change event
-                                                window.dispatchEvent(new CustomEvent('issue-updated', {
-                                                    detail: { issueId: issue.id, type: 'status' }
-                                                }));
-                                                setTimeout(() => window.location.reload(), 1000);
-                                            }}
-                                        />
-                                    </div>
-                                </div>
+                        {/* Issue Header */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                            <div className="flex items-start justify-between mb-6">
+                                <div className="flex-1">
+                                    <h1 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
+                                        {issue.title}
+                                    </h1>
 
-                                {/* Actions Section */}
-                                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
-                                        <h3 className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                            </svg>
-                                            Actions
-                                        </h3>
-                                        <p className="text-xs text-emerald-700 mt-1">
-                                            Manage this issue
-                                        </p>
-                                    </div>
-                                    <div className="p-4">
-                                        <div className="space-y-3">
-                                            {/* Edit Button */}
-                                            {permissions.canEdit ? (
-                                                <EditIssueButton issueId={issue.id} />
-                                            ) : (
-                                                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-500 rounded-lg border border-gray-200">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                    </svg>
-                                                    <span className="text-sm font-medium">Edit Restricted</span>
-                                                </div>
-                                            )}
-
-                                            {/* Delete Button */}
-                                            {permissions.canDelete ? (
-                                                <DeleteIssueButton
-                                                    issueId={issue.id}
-                                                    issueTitle={issue.title}
-                                                    issueStatus={issue.status}
-                                                />
-                                            ) : (
-                                                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-500 rounded-lg border border-gray-200">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                    </svg>
-                                                    <span className="text-sm font-medium">Delete Restricted</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Issue Metadata */}
-                                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                                        <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            Issue Information
-                                        </h4>
-                                    </div>
-                                    <div className="p-4">
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 font-medium">ID:</span>
-                                                <span className="font-mono text-gray-900 bg-gray-100 px-2 py-1 rounded">#{issue.id}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 font-medium">Status:</span>
-                                                <span className={`font-medium px-2 py-1 rounded-full text-xs ${issue.status === 'OPEN' ? 'bg-red-100 text-red-700' :
-                                                    issue.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' :
-                                                        'bg-green-100 text-green-700'
-                                                    }`}>
-                                                    {issue.status.replace('_', ' ')}
+                                    {/* Meta Information */}
+                                    <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+                                        <div className="flex items-center gap-2">
+                                            <FiUser className="w-4 h-4" />
+                                            <span>Created by</span>
+                                            <div className="flex items-center gap-2">
+                                                <UserAvatar user={issue.createdByUser} size={20} />
+                                                <span className="font-medium">
+                                                    {issue.createdByUser?.name || issue.createdByUser?.email || 'Unknown'}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-between items-start text-sm">
-                                                <span className="text-gray-600 font-medium">Assigned:</span>
-                                                <div className="text-right">
-                                                    {issue.assignedToUser?.email ? (
-                                                        <div>
-                                                            <div className="font-medium text-gray-900 text-xs truncate max-w-[120px]" title={issue.assignedToUser.name || ''}>
-                                                                {issue.assignedToUser.name || 'Unknown'}
-                                                            </div>
-                                                            <div className="text-gray-500 text-xs truncate max-w-[120px]" title={issue.assignedToUser.email}>
-                                                                {issue.assignedToUser.email}
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-gray-500 text-xs">Unassigned</span>
-                                                    )}
-                                                </div>
-                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <FiCalendar className="w-4 h-4" />
+                                            <span>{formatDate(issueWithDates.createdAt)}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <FiClock className="w-4 h-4" />
+                                            <span>Updated {getTimeAgo(issueWithDates.updatedAt)}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Permissions Info - Compact */}
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Your Access Level
-                                    </h4>
+                                {/* Action Buttons */}
+                                {hasSession && (
+                                    <div className="flex items-center gap-2">
+                                        {permissions.canEdit && (
+                                            <Link
+                                                href={`/issues/edit/${issue.id}`}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm"
+                                            >
+                                                <FiEdit3 className="w-4 h-4" />
+                                                Edit
+                                            </Link>
+                                        )}
 
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-blue-700 font-medium">Edit Content:</span>
-                                            <span className={`px-2 py-1 rounded-full font-medium ${permissions.canEdit
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {permissions.canEdit ? 'Allowed' : 'Restricted'}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-blue-700 font-medium">Change Status:</span>
-                                            <span className={`px-2 py-1 rounded-full font-medium ${permissions.canChangeStatus
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {permissions.canChangeStatus ? 'Allowed' : 'Restricted'}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-blue-700 font-medium">Delete Issue:</span>
-                                            <span className={`px-2 py-1 rounded-full font-medium ${permissions.canDelete
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {permissions.canDelete ? 'Allowed' : 'Restricted'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {permissions.reason && (
-                                        <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
-                                            <div className="flex items-start gap-1">
-                                                <svg className="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z" />
-                                                </svg>
-                                                <span><strong>Note:</strong> {permissions.reason}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Help for unassigned issues */}
-                                {permissions.isUnassigned && (
-                                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                                        <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                            </svg>
-                                            💡 Quick Tip
-                                        </h4>
-                                        <p className="text-xs text-yellow-700 leading-relaxed">
-                                            This issue is currently unassigned. Assign it to someone above to enable status changes and secure the editing permissions.
-                                        </p>
+                                        {permissions.canDelete && (
+                                            <DeleteIssueButton
+                                                issueId={issue.id}
+                                                issueTitle={issue.title}
+                                                issueStatus={issue.status}
+                                            />
+                                        )}
                                     </div>
                                 )}
+                            </div>
+                        </div>
 
-                                {/* Security Info */}
-                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4">
-                                    <h4 className="text-sm font-semibold text-indigo-900 mb-2 flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                        </svg>
-                                        Security Features
-                                    </h4>
-                                    <div className="text-xs text-indigo-700 space-y-2">
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-green-600">✓</span>
-                                            <span><strong>Role-based access:</strong> Only assigned users can modify content</span>
+                        {/* Issue Description */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div className="p-6 border-b border-gray-200">
+                                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    <FiEye className="w-5 h-5 text-gray-600" />
+                                    Description
+                                </h2>
+                            </div>
+                            <div className="p-6">
+                                <IssueDetails issue={issueWithDates} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sidebar */}
+                    {hasSession && (
+                        <div className="lg:col-span-1 space-y-6">
+
+                            {/* Status Control */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <FiTag className="w-4 h-4 text-gray-600" />
+                                        Status
+                                    </h3>
+                                </div>
+                                <div className="p-4">
+                                    <SecureStatusChanger
+                                        issueId={issue.id}
+                                        currentStatus={issue.status}
+                                        assignedUserEmail={issue.assignedToUser?.email}
+                                        onStatusChange={() => {
+                                            window.dispatchEvent(new CustomEvent('issue-updated', {
+                                                detail: { issueId: issue.id, type: 'status' }
+                                            }));
+                                            setTimeout(() => window.location.reload(), 1000);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Assignee */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <FiUser className="w-4 h-4 text-gray-600" />
+                                        Assignee
+                                        {!permissions.canAssign && (
+                                            <div className="ml-auto">
+                                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                                    Read-only
+                                                </span>
+                                            </div>
+                                        )}
+                                    </h3>
+                                </div>
+                                <div className="p-4">
+                                    <AssigneeSelect issue={issueWithDates} />
+                                </div>
+                            </div>
+
+                            {/* Issue Information */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h3 className="font-semibold text-gray-900">Information</h3>
+                                </div>
+                                <div className="p-4 space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-600">ID</span>
+                                        <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                                            #{issue.id}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-600">Creator</span>
+                                        <div className="flex items-center gap-2">
+                                            <UserAvatar user={issue.createdByUser} size={24} />
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">
+                                                    {issue.createdByUser?.name || 'Unknown'}
+                                                </div>
+                                                {permissions.isCreator && (
+                                                    <div className="text-xs text-green-600">You</div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-green-600">✓</span>
-                                            <span><strong>Status protection:</strong> Assignment required for status changes</span>
+                                    </div>
+
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-600">Created</span>
+                                        <div className="text-right">
+                                            <div className="text-sm font-medium">
+                                                {formatDate(issueWithDates.createdAt).split(',')[0]}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {getTimeAgo(issueWithDates.createdAt)}
+                                            </div>
                                         </div>
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-green-600">✓</span>
-                                            <span><strong>Delete protection:</strong> In-progress issues cannot be deleted</span>
+                                    </div>
+
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-sm text-gray-600">Updated</span>
+                                        <div className="text-right">
+                                            <div className="text-sm font-medium">
+                                                {formatDate(issueWithDates.updatedAt).split(',')[0]}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {getTimeAgo(issueWithDates.updatedAt)}
+                                            </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Your Permissions */}
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-4">
+                                <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <FiUser className="w-3 h-3 text-white" />
+                                    </div>
+                                    Your Access
+                                </h3>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-blue-700">Role:</span>
+                                        <span className="font-medium text-blue-900">
+                                            {permissions.isCreator ? 'Creator' :
+                                                permissions.isAssignee ? 'Assignee' : 'Viewer'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-blue-700">Can Edit:</span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${permissions.canEdit
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
+                                            }`}>
+                                            {permissions.canEdit ? 'Yes' : 'No'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-blue-700">Can Change Status:</span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${permissions.canChangeStatus
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
+                                            }`}>
+                                            {permissions.canChangeStatus ? 'Yes' : 'No'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {permissions.reason && (
+                                    <div className="mt-3 p-2 bg-orange-100 border border-orange-200 rounded text-xs text-orange-700">
+                                        <strong>Note:</strong> {permissions.reason}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Permission Rules */}
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4">
+                                <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-xs">✓</span>
+                                    </div>
+                                    Permission System
+                                </h3>
+
+                                <div className="space-y-2 text-xs text-green-700">
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span><strong>Creator:</strong> Can edit content, assign people, and delete</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span><strong>Assignee:</strong> Can change status (Open, In Progress, Closed)</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span><strong>Others:</strong> Can view but not modify</span>
                                     </div>
                                 </div>
                             </div>

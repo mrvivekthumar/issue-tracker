@@ -1,3 +1,4 @@
+// app/Navbar.tsx - FIXED VERSION with better session handling
 "use client";
 import classnames from 'classnames';
 import { useSession } from 'next-auth/react';
@@ -20,24 +21,52 @@ const Navbar = () => {
     const searchRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
 
-    // ✅ FIX: Enhanced session handling with auto-refresh
-    const { data: session, status } = useSession();
+    // ✅ FIX 1: Better session handling with immediate updates
+    const { data: session, status, update } = useSession();
 
-    // ✅ FIX: Get real issue count with auto-refresh when session changes
+    // ✅ FIX 2: Force session refresh when needed
+    const refreshSession = async () => {
+        console.log('🔄 Manually refreshing session...');
+        await update();
+    };
+
+    // ✅ FIX 3: Listen for authentication events
+    useEffect(() => {
+        const handleAuthEvent = () => {
+            console.log('🔐 Auth event detected, refreshing session...');
+            refreshSession();
+        };
+
+        // Listen for storage events (from other tabs)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'nextauth.message') {
+                handleAuthEvent();
+            }
+        });
+
+        // Listen for custom auth events
+        window.addEventListener('auth-changed', handleAuthEvent);
+
+        return () => {
+            window.removeEventListener('storage', handleAuthEvent);
+            window.removeEventListener('auth-changed', handleAuthEvent);
+        };
+    }, []);
+
+    // ✅ FIX 4: Enhanced issue stats with session dependency
     const { data: issueStats = defaultIssueStats, refetch: refetchIssueStats } = useIssueCount();
 
-    // ✅ FIX: Auto-refresh issue stats when session changes
+    // Auto-refresh issue stats when session changes
     useEffect(() => {
         if (status === 'authenticated' && session) {
             console.log('🔄 Session authenticated, refreshing issue stats...');
-            // Small delay to ensure data is ready
             setTimeout(() => {
                 refetchIssueStats();
             }, 500);
         }
     }, [session, status, refetchIssueStats]);
 
-    // ✅ FIX: Listen for storage events to sync across tabs
+    // Listen for storage events to sync across tabs
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'issue-updated' || e.key === 'assignee-changed') {
@@ -50,7 +79,7 @@ const Navbar = () => {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [refetchIssueStats]);
 
-    // ✅ FIX: Listen for custom events for same-tab updates
+    // Listen for custom events for same-tab updates
     useEffect(() => {
         const handleIssueUpdate = () => {
             console.log('🔄 Issue updated, refreshing stats...');
@@ -108,8 +137,8 @@ const Navbar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isMobileMenuOpen, mounted]);
 
-    // Show loading state during hydration
-    if (!mounted) {
+    // ✅ FIX 5: Show loading state during hydration and session loading
+    if (!mounted || status === 'loading') {
         return (
             <nav className="bg-white backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -127,6 +156,9 @@ const Navbar = () => {
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                            <div className="hidden sm:block">
+                                <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -184,6 +216,7 @@ const Navbar = () => {
                             profileMenuRef={profileMenuRef}
                             session={session}
                             status={status}
+                            onRefreshSession={refreshSession}
                         />
                     </div>
 
@@ -224,6 +257,7 @@ const Navbar = () => {
                                     profileMenuRef={profileMenuRef}
                                     session={session}
                                     status={status}
+                                    onRefreshSession={refreshSession}
                                 />
                             </div>
                         </div>
@@ -475,16 +509,24 @@ const MobileNavLinks = ({ issueCount }: { issueCount: number }) => {
     );
 };
 
-// ✅ FIX: Enhanced AuthStatus component with better session handling
+// ✅ FIX 6: Enhanced AuthStatus component with session refresh
 interface AuthStatusProps {
     isProfileMenuOpen: boolean;
     setIsProfileMenuOpen: (open: boolean) => void;
     profileMenuRef: React.RefObject<HTMLDivElement>;
     session: any;
     status: string;
+    onRefreshSession: () => Promise<void>;
 }
 
-const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef, session, status }: AuthStatusProps) => {
+const AuthStatus = ({
+    isProfileMenuOpen,
+    setIsProfileMenuOpen,
+    profileMenuRef,
+    session,
+    status,
+    onRefreshSession
+}: AuthStatusProps) => {
     const [mounted, setMounted] = useState(false);
     const [imageError, setImageError] = useState(false);
 
@@ -492,7 +534,7 @@ const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef, s
         setMounted(true);
     }, []);
 
-    // ✅ FIX: Reset image error when session changes
+    // Reset image error when session changes
     useEffect(() => {
         setImageError(false);
     }, [session?.user?.image]);
@@ -522,7 +564,7 @@ const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef, s
 
     const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'%3E%3C/path%3E%3Ccircle cx='12' cy='7' r='4'%3E%3C/circle%3E%3C/svg%3E";
 
-    // ✅ FIX: Determine which image to use with error handling
+    // Determine which image to use with error handling
     const imageSource = imageError || !session?.user?.image ? defaultAvatar : session.user.image;
 
     return (
@@ -589,6 +631,13 @@ const AuthStatus = ({ isProfileMenuOpen, setIsProfileMenuOpen, profileMenuRef, s
                         <button className="flex items-center w-full p-3 hover:bg-gray-50 transition-colors text-left">
                             <FaCog className="h-4 w-4 mr-3 text-gray-600" />
                             <span className="text-sm">Preferences</span>
+                        </button>
+                        <button
+                            onClick={onRefreshSession}
+                            className="flex items-center w-full p-3 hover:bg-gray-50 transition-colors text-left"
+                        >
+                            <FiChevronDown className="h-4 w-4 mr-3 text-gray-600" />
+                            <span className="text-sm">Refresh Session</span>
                         </button>
                     </div>
 

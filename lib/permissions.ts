@@ -1,4 +1,4 @@
-// lib/permissions.ts - Centralized permission checking utilities
+// lib/permissions.ts - Updated for Creator-Based Permission System
 
 import { Session } from 'next-auth';
 import { Issue, Status } from '@prisma/client';
@@ -10,13 +10,21 @@ export interface UserPermissions {
     canDelete: boolean;
     canAssign: boolean;
     reason?: string;
-    isAssignedUser: boolean;
+    isCreator: boolean;
+    isAssignee: boolean;
     isUnassigned: boolean;
+    creatorEmail?: string | null;
     assignedUserEmail?: string | null;
     currentUserEmail?: string;
 }
 
 export interface IssueWithUser extends Issue {
+    createdByUser?: {
+        id: string;
+        name: string | null;
+        email: string | null;
+        image: string | null;
+    } | null;
     assignedToUser?: {
         id: string;
         name: string | null;
@@ -26,8 +34,11 @@ export interface IssueWithUser extends Issue {
 }
 
 /**
- * 🔐 CORE PERMISSION CHECKER
- * This is the single source of truth for all permission logic
+ * 🔐 NEW PERMISSION SYSTEM - CREATOR-BASED
+ * Rules:
+ * 1. Issue Creator: Can edit, delete, and assign
+ * 2. Issue Assignee: Can only change status (Open, In Progress, Closed)
+ * 3. Other Users: Can only read
  */
 export function checkIssuePermissions(
     session: Session | null,
@@ -41,13 +52,15 @@ export function checkIssuePermissions(
         canChangeStatus: false,
         canDelete: false,
         canAssign: false,
-        isAssignedUser: false,
+        isCreator: false,
+        isAssignee: false,
         isUnassigned: false,
+        creatorEmail: issue?.createdByUser?.email,
         assignedUserEmail: issue?.assignedToUser?.email,
         currentUserEmail: session?.user?.email ?? undefined
     };
 
-    // 🚫 Not authenticated
+    // 🚫 Not authenticated - no access
     if (!session?.user?.email) {
         return {
             ...basePermissions,
@@ -55,7 +68,7 @@ export function checkIssuePermissions(
         };
     }
 
-    // 📄 New issue (no existing issue)
+    // 📄 New issue (no existing issue) - creator permissions
     if (!issue) {
         return {
             ...basePermissions,
@@ -69,44 +82,49 @@ export function checkIssuePermissions(
     }
 
     const currentUserEmail = session.user.email;
+    const creatorEmail = issue.createdByUser?.email;
     const assignedUserEmail = issue.assignedToUser?.email;
-    const isAssignedUser = currentUserEmail === assignedUserEmail;
+
+    const isCreator = currentUserEmail === creatorEmail;
+    const isAssignee = currentUserEmail === assignedUserEmail;
     const isUnassigned = !assignedUserEmail;
 
-    // 🔐 PERMISSION RULES
+    // 🔐 NEW PERMISSION RULES
     const permissions: UserPermissions = {
         // ✅ READ: Anyone authenticated can read
         canRead: true,
 
-        // ✏️ EDIT: Assigned user OR unassigned issues
-        canEdit: isAssignedUser || isUnassigned,
+        // ✏️ EDIT: Only issue creator can edit
+        canEdit: isCreator,
 
-        // 🔄 STATUS CHANGE: Only assigned user (issue must be assigned)
-        canChangeStatus: isAssignedUser && !isUnassigned,
+        // 🔄 STATUS CHANGE: Only assignee can change status (and issue must be assigned)
+        canChangeStatus: isAssignee && !isUnassigned,
 
-        // 🗑️ DELETE: Assigned user OR unassigned issues (but not IN_PROGRESS)
-        canDelete: (isAssignedUser || isUnassigned) && issue.status !== 'IN_PROGRESS',
+        // 🗑️ DELETE: Only issue creator can delete
+        canDelete: isCreator,
 
-        // 👤 ASSIGN: Anyone can assign/reassign (this might vary by your business rules)
-        canAssign: true,
+        // 👤 ASSIGN: Only issue creator can assign/reassign
+        canAssign: isCreator,
 
-        isAssignedUser,
+        isCreator,
+        isAssignee,
         isUnassigned,
+        creatorEmail,
         assignedUserEmail,
         currentUserEmail
     };
 
     // 📝 Generate appropriate reason messages
-    if (!permissions.canEdit && !isUnassigned) {
-        permissions.reason = `Only ${assignedUserEmail} can edit this issue`;
+    if (!permissions.canEdit && !isCreator) {
+        permissions.reason = `Only the issue creator (${creatorEmail}) can edit this issue`;
     } else if (!permissions.canChangeStatus && isUnassigned) {
         permissions.reason = 'Issue must be assigned before status can be changed';
-    } else if (!permissions.canChangeStatus && !isAssignedUser) {
-        permissions.reason = `Only ${assignedUserEmail} can change the status`;
-    } else if (!permissions.canDelete && issue.status === 'IN_PROGRESS') {
-        permissions.reason = 'Cannot delete issues in progress';
-    } else if (!permissions.canDelete && !isAssignedUser && !isUnassigned) {
-        permissions.reason = `Only ${assignedUserEmail} can delete this issue`;
+    } else if (!permissions.canChangeStatus && !isAssignee) {
+        permissions.reason = `Only the assigned user (${assignedUserEmail}) can change the status`;
+    } else if (!permissions.canDelete && !isCreator) {
+        permissions.reason = `Only the issue creator (${creatorEmail}) can delete this issue`;
+    } else if (!permissions.canAssign && !isCreator) {
+        permissions.reason = `Only the issue creator (${creatorEmail}) can assign this issue`;
     }
 
     return permissions;
@@ -114,7 +132,6 @@ export function checkIssuePermissions(
 
 /**
  * 🎯 OPERATION-SPECIFIC CHECKERS
- * Convenience functions for specific operations
  */
 
 export function canUserEditIssue(session: Session | null, issue: IssueWithUser | null): boolean {
@@ -135,7 +152,6 @@ export function canUserAssignIssue(session: Session | null, issue: IssueWithUser
 
 /**
  * 🛡️ BUSINESS RULE VALIDATORS
- * Additional validation for complex business rules
  */
 
 export function validateStatusChange(
@@ -155,15 +171,15 @@ export function validateStatusChange(
     // Additional business rules for status transitions
     const currentStatus = issue.status;
 
-    // Example: Prevent reopening closed issues (optional rule)
+    // Prevent invalid status transitions
     if (currentStatus === 'CLOSED' && newStatus === 'OPEN') {
         return {
             allowed: false,
-            reason: 'Closed issues cannot be reopened. Create a new issue instead.'
+            reason: 'Closed issues cannot be reopened. Ask the creator to create a new issue.'
         };
     }
 
-    // Example: Require assignment before moving to IN_PROGRESS (optional rule)
+    // Require assignment before moving to IN_PROGRESS
     if (newStatus === 'IN_PROGRESS' && !issue.assignedToUser) {
         return {
             allowed: false,
@@ -199,36 +215,7 @@ export function validateDeletion(
 }
 
 /**
- * 🎨 UI HELPER FUNCTIONS
- * Functions to help with UI state and styling
- */
-
-export function getPermissionIcon(hasPermission: boolean): string {
-    return hasPermission ? '✅' : '🔒';
-}
-
-export function getPermissionColor(hasPermission: boolean): string {
-    return hasPermission ? 'text-green-600' : 'text-red-600';
-}
-
-export function getPermissionBadge(hasPermission: boolean): {
-    text: string;
-    className: string
-} {
-    return hasPermission
-        ? {
-            text: 'Allowed',
-            className: 'bg-green-100 text-green-800 border-green-200'
-        }
-        : {
-            text: 'Restricted',
-            className: 'bg-red-100 text-red-800 border-red-200'
-        };
-}
-
-/**
  * 🔍 DEBUG HELPERS
- * Functions to help debug permission issues in development
  */
 
 export function debugPermissions(session: Session | null, issue: IssueWithUser | null): void {
@@ -236,7 +223,7 @@ export function debugPermissions(session: Session | null, issue: IssueWithUser |
 
     const permissions = checkIssuePermissions(session, issue);
 
-    console.group('🔐 Permission Debug');
+    console.group('🔐 Permission Debug (Creator-Based System)');
     console.log('Session:', {
         authenticated: !!session,
         userEmail: session?.user?.email
@@ -244,128 +231,53 @@ export function debugPermissions(session: Session | null, issue: IssueWithUser |
     console.log('Issue:', {
         id: issue?.id,
         status: issue?.status,
+        createdBy: issue?.createdByUser?.email || 'Unknown',
         assignedTo: issue?.assignedToUser?.email || 'Unassigned'
     });
-    console.log('Permissions:', permissions);
+    console.log('User Roles:', {
+        isCreator: permissions.isCreator,
+        isAssignee: permissions.isAssignee,
+        isUnassigned: permissions.isUnassigned
+    });
+    console.log('Permissions:', {
+        canRead: permissions.canRead,
+        canEdit: permissions.canEdit,
+        canChangeStatus: permissions.canChangeStatus,
+        canDelete: permissions.canDelete,
+        canAssign: permissions.canAssign,
+        reason: permissions.reason
+    });
     console.groupEnd();
 }
 
 /**
  * 🏷️ PERMISSION CONSTANTS
- * Centralized constants for permission-related UI
  */
 
 export const PERMISSION_MESSAGES = {
     NOT_AUTHENTICATED: 'You must be logged in to perform this action',
-    NOT_ASSIGNED: 'Only the assigned user can perform this action',
-    UNASSIGNED_ISSUE: 'This issue must be assigned before this action can be performed',
-    IN_PROGRESS_DELETE: 'Issues in progress cannot be deleted',
+    NOT_CREATOR: 'Only the issue creator can perform this action',
+    NOT_ASSIGNEE: 'Only the assigned user can change the status',
+    UNASSIGNED_ISSUE: 'This issue must be assigned before status can be changed',
     STATUS_CHANGE_DENIED: 'You do not have permission to change the status of this issue',
     EDIT_DENIED: 'You do not have permission to edit this issue',
-    DELETE_DENIED: 'You do not have permission to delete this issue'
+    DELETE_DENIED: 'You do not have permission to delete this issue',
+    ASSIGN_DENIED: 'You do not have permission to assign this issue'
 } as const;
 
 export const PERMISSION_TOOLTIPS = {
-    EDIT_ALLOWED: 'You can edit this issue because you are assigned to it',
-    EDIT_DENIED: 'Only assigned users can edit issues',
+    EDIT_ALLOWED: 'You can edit this issue because you created it',
+    EDIT_DENIED: 'Only the issue creator can edit issues',
     STATUS_ALLOWED: 'You can change the status because you are assigned to this issue',
     STATUS_DENIED: 'Only assigned users can change issue status',
-    DELETE_ALLOWED: 'You can delete this issue',
-    DELETE_DENIED: 'Only assigned users can delete issues (except those in progress)'
+    DELETE_ALLOWED: 'You can delete this issue because you created it',
+    DELETE_DENIED: 'Only the issue creator can delete issues',
+    ASSIGN_ALLOWED: 'You can assign this issue because you created it',
+    ASSIGN_DENIED: 'Only the issue creator can assign this issue'
 } as const;
 
 /**
- * 🚀 ADVANCED PERMISSION CHECKERS
- * For complex scenarios and future features
- */
-
-export interface BulkPermissions {
-    canEditAll: boolean;
-    canDeleteAll: boolean;
-    canChangeStatusAll: boolean;
-    restrictedIssues: number[];
-    allowedIssues: number[];
-}
-
-export function checkBulkPermissions(
-    session: Session | null,
-    issues: IssueWithUser[]
-): BulkPermissions {
-    const results = issues.map(issue => ({
-        issueId: issue.id,
-        permissions: checkIssuePermissions(session, issue)
-    }));
-
-    const restrictedIssues = results
-        .filter(r => !r.permissions.canEdit)
-        .map(r => r.issueId);
-
-    const allowedIssues = results
-        .filter(r => r.permissions.canEdit)
-        .map(r => r.issueId);
-
-    return {
-        canEditAll: restrictedIssues.length === 0,
-        canDeleteAll: results.every(r => r.permissions.canDelete),
-        canChangeStatusAll: results.every(r => r.permissions.canChangeStatus),
-        restrictedIssues,
-        allowedIssues
-    };
-}
-
-/**
- * 🎯 ROLE-BASED PERMISSIONS (Future Enhancement)
- * Framework for adding role-based access control
- */
-
-export type UserRole = 'admin' | 'manager' | 'developer' | 'viewer';
-
-export interface RolePermissions {
-    canViewAll: boolean;
-    canEditAll: boolean;
-    canDeleteAll: boolean;
-    canAssignAll: boolean;
-    canManageUsers: boolean;
-}
-
-export function getRolePermissions(role: UserRole): RolePermissions {
-    const roleMap: Record<UserRole, RolePermissions> = {
-        admin: {
-            canViewAll: true,
-            canEditAll: true,
-            canDeleteAll: true,
-            canAssignAll: true,
-            canManageUsers: true
-        },
-        manager: {
-            canViewAll: true,
-            canEditAll: true,
-            canDeleteAll: false, // Managers can't delete
-            canAssignAll: true,
-            canManageUsers: false
-        },
-        developer: {
-            canViewAll: true,
-            canEditAll: false, // Only assigned issues
-            canDeleteAll: false,
-            canAssignAll: false,
-            canManageUsers: false
-        },
-        viewer: {
-            canViewAll: true,
-            canEditAll: false,
-            canDeleteAll: false,
-            canAssignAll: false,
-            canManageUsers: false
-        }
-    };
-
-    return roleMap[role];
-}
-
-/**
  * 📊 AUDIT LOGGING
- * Functions to log permission-related actions for security auditing
  */
 
 export function logPermissionAction(
@@ -385,13 +297,13 @@ export function logPermissionAction(
         action,
         user: session?.user?.email || 'anonymous',
         issueId: issue?.id,
+        creator: issue?.createdByUser?.email,
         assignedTo: issue?.assignedToUser?.email,
         success,
         reason,
         userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
     };
 
-    // In production, you'd send this to your logging service
     console.log('🔐 Permission Action:', logEntry);
 }
 
